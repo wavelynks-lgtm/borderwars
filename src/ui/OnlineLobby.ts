@@ -5,20 +5,28 @@ import {api,OnlineClient,serverURL} from '../multiplayer/Client';
 import type {MatchInfo} from '../multiplayer/protocol';
 import {savedWorlds} from '../map/generatedWorlds';
 export type LobbyView='lobby'|'leaderboard'|'random'|'custom';
+const lobbies=new WeakMap<HTMLElement,{root:HTMLElement;open:()=>void;dispose:()=>void}>();
+export function closeOnlineLobby(container:HTMLElement){lobbies.get(container)?.dispose();}
 export function showOnlineLobby(container:HTMLElement,onMatch:(info:MatchInfo,client:OnlineClient)=>void,initialView:LobbyView='lobby'){
+ const existing=lobbies.get(container);if(existing){existing.open();return existing.root;}
  let client:OnlineClient|null=null,room:any=null,started=false,view:LobbyView=initialView,creating=false,queued=false,offset=0;
  const status=h('p',{class:'online-status',role:'status'},'Sign in to play online.');
  const content=h('div',{class:'online-content'});
  const title=h('h2',{},initialView==='custom'?'CUSTOM MATCHES':initialView==='random'?'RANDOM MATCH':'BORDERWARS ONLINE');
- const close=()=>{client?.send({type:'leave'});client?.close();root.remove();};
+ const onAccountChange=()=>{void sessionUser().then(user=>{if(neonAuth&&!user)dispose();}).catch(()=>{});};
+ const open=()=>{root.style.display='';resume.style.display='none';};
+ const dispose=()=>{client?.send({type:'leave'});client?.close();root.remove();resume.remove();lobbies.delete(container);clearInterval(timer);clearInterval(poll);window.removeEventListener('borderwars-account-change',onAccountChange);};
+ const close=()=>{if(client){root.style.display='none';resume.style.display='';}else dispose();};
+ const resume=h('button',{class:'online-resume',style:'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:1000;display:none',onClick:open},'Return to lobby');
  const root=h('div',{class:'online-overlay'},h('section',{class:'online-panel'},h('div',{class:'online-heading'},title,h('button',{onClick:close},'Close')),status,content));
- container.append(root);
+ container.append(root,resume);window.addEventListener('borderwars-account-change',onAccountChange);lobbies.set(container,{root,open,dispose});
  const error=(e:unknown)=>{status.textContent=e instanceof Error?e.message:String(e);};
  const run=(fn:()=>Promise<void>)=>()=>{void fn().catch(error);};
  const timer=window.setInterval(()=>{
-  if(!root.isConnected){clearInterval(timer);return;}
+  if(!root.isConnected){clearInterval(timer);resume.remove();if(lobbies.get(container)?.root===root)lobbies.delete(container);window.removeEventListener('borderwars-account-change',onAccountChange);if(!started)client?.close();return;}
+  resume.textContent=room?.countdownAt?`Return to lobby · ${Math.max(0,Math.ceil((room.countdownAt-Date.now()-offset)/1000))}s`:'Return to lobby';
   const clock=content.querySelector('.online-countdown');
-  if(clock&&room){const seconds=Math.max(0,Math.ceil((room.countdownAt-Date.now()-offset)/1000));clock.textContent=room.phase==='loading'?'Preparing everyone’s world…':room.countdownAt?`Match starts in ${seconds}s`:room.kind==='random'?'Waiting for another player…':'Waiting for the host';}
+  if(clock&&room){const seconds=Math.max(0,Math.ceil((room.countdownAt-Date.now()-offset)/1000));clock.textContent=room.phase==='loading'?'Preparing everyone’s world…':room.countdownAt?`Match starts in ${seconds}s`:room.kind==='random'?'Preparing countdown…':'Waiting for the host';}
  },250);
  const poll=window.setInterval(()=>{if(!root.isConnected){clearInterval(poll);return;}if(client?.connected&&!room&&!creating&&view!=='leaderboard')client.send({type:'list'});},3000);
  function authForm(){
@@ -65,8 +73,8 @@ export function showOnlineLobby(container:HTMLElement,onMatch:(info:MatchInfo,cl
   status.textContent=`${r.private?'Private':'Public'} · ${r.kind==='random'?'Random matchmaking':'Custom · unranked'} · ${r.members.length}/${r.capacity} players`;
   const s=r.settings;
   content.replaceChildren(h('div',{class:'online-countdown',role:'timer'},r.countdownAt?'Starting soon…':'Waiting for players…'),h('p',{class:'online-rules'},`${s.customWorld?.name??'Earth'} · ${s.numNations} nations · ${s.numBots} tribes · ${s.goldMultiplier}× gold · ${s.disableNukes?'No nukes':'Nukes on'} · ${s.maxTimerMinutes} min`),h('p',{},'Invite friends with this room code'),h('div',{class:'online-code'},r.id),h('div',{class:'online-roster'},...r.members.map((m:any)=>h('div',{class:'online-player'},h('span',{class:'online-player-dot',style:`background:${m.color}`}),h('strong',{},m.name),h('span',{},`${m.id===r.host?'Host · ':''}${m.connected?(m.ready?'Ready':'Not ready'):'Disconnected'}`)))));
-  if(r.phase==='lobby')content.append(h('div',{class:'online-actions'},...(r.kind==='custom'?[h('button',{onClick:()=>client?.send({type:'ready',ready:!me?.ready})},me?.ready?'Not ready':'Ready'),h('button',{disabled:r.host!==client?.profile?.id||r.members.length<2||r.members.some((m:any)=>!m.ready||!m.connected),onClick:()=>client?.send({type:'start'})},'Start match')]:[]),h('button',{onClick:()=>client?.send({type:'leave'})},'Leave')));
-  if(r.kind==='random')content.append(h('p',{},'Starts automatically 60 seconds after two players join. The countdown pauses if fewer than two remain.'));
+  if(r.phase==='lobby')content.append(h('div',{class:'online-actions'},...(r.kind==='custom'?[h('button',{onClick:()=>client?.send({type:'ready',ready:!me?.ready})},me?.ready?'Not ready':'Ready'),h('button',{disabled:r.host!==client?.profile?.id||r.members.length<1||r.members.some((m:any)=>!m.ready||!m.connected),onClick:()=>client?.send({type:'start'})},'Start match')]:[]),h('button',{onClick:()=>client?.send({type:'leave'})},'Leave')));
+  if(r.kind==='random')content.append(h('p',{},'Starts 60 seconds after the first player joins. AI opponents fill empty player slots. Closing this window keeps you in the lobby.'));
  }
  function connect(token:string){
   if(!root.isConnected)return;client?.close();client=new OnlineClient(token);status.textContent='Connecting to the match server…';
@@ -77,12 +85,12 @@ export function showOnlineLobby(container:HTMLElement,onMatch:(info:MatchInfo,cl
    if(m.type==='error'){status.textContent=m.message;content.querySelectorAll('button').forEach(b=>{if(b.textContent==='Create match')b.disabled=false;});}
    if(m.type==='connection')status.textContent=m.status;
    if(m.type==='aborted'){room=null;queued=false;view='lobby';status.textContent=m.message;client?.send({type:'list'});}
-   if(m.type==='match'&&!started){started=true;root.remove();onMatch(m.info,client!);}
+   if(m.type==='match'&&!started){started=true;root.remove();resume.remove();lobbies.delete(container);clearInterval(timer);clearInterval(poll);window.removeEventListener('borderwars-account-change',onAccountChange);onMatch(m.info,client!);}
   });
  }
  async function restore(){
   try{
-   if(neonAuth){const user=await sessionUser();if(!user){authForm();return;}if(!serverURL){status.textContent=`Signed in as ${user.name}. The public match server has not been connected yet.`;content.replaceChildren(h('button',{onClick:()=>showAccount(container)},'Your account'));return;}const token=await authToken();if(!token){authForm();return;}connect(token);return;}
+   if(neonAuth){const user=await sessionUser();if(!user){authForm();return;}if(!serverURL){status.textContent=`Signed in as ${user.name}. The public match server has not been connected yet.`;content.replaceChildren(h('button',{onClick:()=>showAccount(container)},'Your account'));return;}const token=await authToken();if(!token)throw new Error('Your account is signed in, but a match access token could not be obtained. Retry, or sign out and back in.');connect(token);return;}
    if(!serverURL){status.textContent='Online play is awaiting server deployment. Single player is available now.';return;}
    const token=await authToken();if(token){await api('/api/me');connect(token);}else authForm();
   }catch(e){status.textContent=`Could not connect. Your saved sign-in has not been removed. ${e instanceof Error?e.message:String(e)}`;content.replaceChildren(h('button',{onClick:()=>void restore()},'Retry'),h('button',{onClick:authForm},'Sign in'));}

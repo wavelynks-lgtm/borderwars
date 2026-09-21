@@ -14,17 +14,17 @@ try{
  }
  const [a,b,observer]=pages;
  await a.getByRole('button',{name:/Random Match/}).click();await a.locator('.online-code').waitFor();
- await a.getByText('Waiting for another player…',{exact:true}).waitFor();
+ await a.getByRole('timer').filter({hasText:'Match starts in'}).waitFor();
  await b.getByRole('button',{name:/Random Match/}).click();await b.locator('.online-code').waitFor();
  assert.equal(await a.locator('.online-code').textContent(),await b.locator('.online-code').textContent());
  await a.waitForFunction(()=>document.querySelector('.online-countdown')?.textContent?.includes('Match starts in'));
  await observer.waitForFunction(()=>[...document.querySelectorAll('.action-card')].find(e=>e.textContent.includes('Random Match'))?.querySelector('.action-badge')?.textContent==='2');
  await a.screenshot({path:'/tmp/borderwars-random-lobby.png'});
- await b.getByRole('button',{name:'Leave',exact:true}).click();await a.getByText('Waiting for another player…',{exact:true}).waitFor();
+ await b.getByRole('button',{name:'Leave',exact:true}).click();await a.getByRole('timer').filter({hasText:'Match starts in'}).waitFor();
  await b.getByRole('button',{name:'Join random match',exact:true}).click();
  await Promise.all([a,b].map(p=>p.waitForFunction(()=>window.__app?.online?.verifiedTick>=20,null,{timeout:120000})));
  for(const p of [a,b])assert.equal(await p.evaluate(()=>__app.online.halted),false);
- console.log('Random queue, live counts, roster, countdown cancellation and synchronized match passed');
+ console.log('Random queue, live counts, roster, countdown continuity and synchronized match passed');
  for(const p of [a,b]){await p.getByRole('button',{name:'Surrender & leave',exact:true}).click();await p.getByRole('button',{name:/Custom Match/}).waitFor();}
  await a.evaluate(recipe=>localStorage.setItem('borderwars.worlds.v1',JSON.stringify([{id:'test-islands',recipe,savedAt:Date.now()}])),{...DEFAULT_RECIPE,name:'Multiplayer Islands',resolution:512,countries:10,layout:'archipelago'});
  await a.getByRole('button',{name:/Custom Match/}).click();await a.getByRole('button',{name:'Create custom match',exact:true}).click();await a.getByLabel('Match world').selectOption('test-islands');await a.getByLabel('Gold income').selectOption('2');await a.getByRole('button',{name:'Create match',exact:true}).click();await a.locator('.online-code').waitFor({timeout:90000});

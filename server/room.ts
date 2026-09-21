@@ -35,19 +35,24 @@ export class Room {
   if(this.phase==='lobby'&&this.kind==='custom')this.countdownAt=0;
   if(this.phase==='lobby'&&id===this.host)this.host=this.members[0]?.id??'';
   this.reconcileCountdown();this.update();}
- reconcileCountdown(){if(this.kind!=='random'||this.phase!=='lobby')return;const n=this.members.filter(m=>this.peers.get(m.id)?.connected).length;if(n<2)this.countdownAt=0;else if(!this.countdownAt)this.countdownAt=Date.now()+60000;}
+ reconcileCountdown(){if(this.kind!=='random'||this.phase!=='lobby')return;const n=this.members.filter(m=>this.peers.get(m.id)?.connected).length;if(n<1)this.countdownAt=0;else if(!this.countdownAt)this.countdownAt=Date.now()+60000;}
  setReady(id:string,on:boolean){if(this.phase!=='lobby'||this.kind==='random')return;const m=this.members.find(m=>m.id===id);if(m)m.ready=on;if(!on)this.countdownAt=0;this.update();}
  requestStart(id:string){
   if(id!==this.host||this.phase!=='lobby')throw new Error('Only the host can start the lobby');
-  if(this.members.length<2||this.members.some(m=>!m.ready||!this.peers.get(m.id)?.connected))throw new Error('At least two connected players must be ready');
+  if(this.members.length<1||this.members.some(m=>!m.ready||!this.peers.get(m.id)?.connected))throw new Error('At least one connected player must be ready');
   if(!this.countdownAt)this.countdownAt=Date.now()+5000;this.update();
  }
  async start(id:string){
   if(id!==this.host||this.phase!=='lobby')throw new Error('Only the host can start the lobby');
-  if(this.members.length<2||this.members.some(m=>!m.ready||!this.peers.get(m.id)?.connected))throw new Error('At least two connected players must be ready');
+  if(this.members.length<1||this.members.some(m=>!m.ready||!this.peers.get(m.id)?.connected))throw new Error('At least one connected player must be ready');
   this.phase='loading';this.loadingAt=Date.now();this.update();
   try{
-   const settings=this.settings;
+   // Preserve each preset's AI population while filling vacant human slots.
+   // Send these final settings to every client for deterministic simulation.
+   const settings={...this.settings};
+   if(this.kind==='random')settings.numNations=Math.max(settings.numNations,8-this.members.length);
+   else if(this.members.length===1&&settings.numNations+settings.numBots===0)settings.numBots=1;
+   this.settings=settings;
    this.game=await createOnlineGame(this.mapFactory(),settings,this.members,this.members[0].id);
    if(this.phase!=='loading')return;
    this.info={id:this.id,settings,members:this.members,mapHash:this.mapHash,mapURL:this.mapURL};

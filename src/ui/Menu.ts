@@ -7,7 +7,7 @@ import {showCustomization} from "./Customization";
 import {showStore} from "./Store";
 import {localCosmetics,flagGlyph} from "../customization/cosmetics";
 import {mountMenuAd,privacyChoices} from "../commerce/ads";
-import {showOnlineLobby,type LobbyView} from "./OnlineLobby";
+import {showOnlineLobby,closeOnlineLobby,type LobbyView} from "./OnlineLobby";
 import type {OnlineClient} from "../multiplayer/Client";
 import type {MatchInfo} from "../multiplayer/protocol";
 import { DEFAULT_SETTINGS, Difficulty, GraphicsQuality, MAX_PLAYERS, SETTINGS_REV, UnitType, clampRoster, type GameSettings, type WorldId } from "../core/types";
@@ -115,6 +115,7 @@ export function showMenu(container: HTMLElement, onPlay: (s: GameSettings) => vo
     };
     saveSettings(settings);
     el.remove();
+    closeOnlineLobby(container);
     onPlay(settings);
   };
 
@@ -202,7 +203,7 @@ export function showMenu(container: HTMLElement, onPlay: (s: GameSettings) => vo
         h("div", { class: "help-item" }, h("kbd", {}, "1 / 2"), "attack ratio · ", h("kbd", {}, "Space"), " terrain · ", h("kbd", {}, "Esc"), " cancel · ", h("kbd", {}, "F3"), " FPS"),
         h("div", { class: "help-item" }, h("kbd", {}, "Shift+R"), "retaliate · ", h("kbd", {}, "\\"), "hide UI"),
         h("div", { class: "help-item" }, h("kbd", {}, "`"), "dev panel · ", h("kbd", {}, "Shift-click"), "paint land · ", h("kbd", {}, "Shift+N"), "skip spawn"),
-        h("div", { class: "help-item" }, "Random matches use shared settings and start after two players join. Create custom matches with your saved World Forge maps."),
+        h("div", { class: "help-item" }, "Random matches use shared settings and start after 60 seconds, with AI filling empty player slots. Create custom matches with your saved World Forge maps."),
       ),
     );
   };

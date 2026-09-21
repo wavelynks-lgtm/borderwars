@@ -7,10 +7,10 @@ import {GameMap} from '../src/core/GameMap.ts';
 import {decodeMap} from '../src/multiplayer/map.ts';
 const map=()=>new GameMap(256,128,new Uint8Array(256*128).fill(1),new Uint16Array(256*128),[]);
 const peer=id=>({id,name:id,connected:true,send:()=>{}});
-test('random lobbies count down only with two players, reset on departure and transfer host',async()=>{
+test('random countdown starts with one player, survives departures and transfers host',async()=>{
  const r=new Room('queue','a',false,map,'hash',async()=>{});r.kind='random';r.settings=randomMatch(4).settings;
- r.join(peer('a'));assert.equal(r.countdownAt,0);r.join(peer('b'));assert.ok(r.countdownAt-Date.now()>55000);assert.ok(r.members.every(m=>m.ready));
- r.leave('a');assert.equal(r.host,'b');assert.equal(r.countdownAt,0);r.join(peer('c'));assert.ok(r.countdownAt>Date.now());
+ r.join(peer('a'));assert.ok(r.countdownAt>Date.now());const deadline=r.countdownAt;r.join(peer('b'));assert.equal(r.countdownAt,deadline);assert.ok(r.countdownAt-Date.now()>55000);assert.ok(r.members.every(m=>m.ready));
+ r.leave('a');assert.equal(r.host,'b');assert.equal(r.countdownAt,deadline);r.join(peer('c'));assert.ok(r.countdownAt>Date.now());
  r.countdownAt=Date.now()-1;r.tick();await new Promise(resolve=>setTimeout(resolve,30));assert.equal(r.phase,'loading');assert.equal(r.game.ticks,0);
  r.loaded('b',0);r.tick();assert.equal(r.game.ticks,0);r.loaded('c',0);r.tick();assert.equal(r.game.ticks,1);
 });
@@ -33,4 +33,16 @@ test('custom host countdown requires readiness and cancels when someone unreadie
  assert.throws(()=>r.requestStart('a'),/ready/);r.setReady('a',true);r.setReady('b',true);assert.throws(()=>r.requestStart('b'),/host/);
  r.requestStart('a');assert.ok(r.countdownAt>Date.now());r.setReady('b',false);assert.equal(r.countdownAt,0);
  r.setReady('b',true);r.requestStart('a');r.join(peer('c'));assert.equal(r.countdownAt,0);
+});
+
+test('one-player random matches fill vacant slots with AI and still wait for loading',async()=>{
+ const r=new Room('solo','a',false,map,'hash',async()=>{});r.kind='random';r.settings=randomMatch(0).settings;r.join(peer('a'));
+ r.countdownAt=Date.now()-1;r.tick();await new Promise(resolve=>setTimeout(resolve,30));
+ assert.equal(r.phase,'loading');assert.equal(r.info.members.length,1);assert.equal(r.info.settings.numNations,7);
+ assert.equal(r.game.ticks,0);r.loaded('a',0);r.tick();assert.equal(r.game.ticks,1);
+});
+test('empty random lobby cancels countdown; solo custom matches get an AI opponent',async()=>{
+ const r=new Room('empty','a',false,map,'hash',async()=>{});r.kind='random';r.join(peer('a'));r.leave('a');assert.equal(r.countdownAt,0);
+ const c=new Room('solo-custom','a',false,map,'hash',async()=>{});c.settings.numNations=0;c.settings.numBots=0;c.join(peer('a'));c.setReady('a',true);c.requestStart('a');
+ assert.ok(c.countdownAt>Date.now());await c.start('a');assert.equal(c.info.settings.numBots,1);assert.equal(c.phase,'loading');
 });
