@@ -4,7 +4,7 @@ const browser=await chromium.launch({channel:'chrome',headless:true});
 const page=await browser.newPage({viewport:{width:1440,height:900}});
 const errors=[];
 page.on('pageerror',e=>errors.push(e.message));
-await page.addInitScript(({world,packed})=>localStorage.setItem('borderwars.settings',JSON.stringify({settingsRev:4,world,devMode:false,randomSpawn:true,numNations:packed?28:10,numBots:packed?71:9})),{world:process.env.BW_WORLD??'earth',packed:process.env.BW_PACKED==='1'});
+await page.addInitScript(({world,packed})=>localStorage.setItem('borderwars.settings',JSON.stringify({settingsRev:5,world,devMode:false,randomSpawn:true,numNations:0,numBots:packed?99:19})),{world:process.env.BW_WORLD??'earth',packed:process.env.BW_PACKED==='1'});
 await page.goto((process.env.BW_URL??'http://127.0.0.1:5173')+'/?dev=0');
 await page.getByRole('button',{name:'Single Player'}).click();
 await page.getByRole('button',{name:'Start',exact:true}).click();

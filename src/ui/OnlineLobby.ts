@@ -3,6 +3,7 @@ import {showAccount} from './Account';
 import {h} from './dom';
 import {api,OnlineClient,serverURL} from '../multiplayer/Client';
 import type {MatchInfo} from '../multiplayer/protocol';
+import {MAX_PLAYERS,rosterSize} from '../core/types';
 import {savedWorlds} from '../map/generatedWorlds';
 export type LobbyView='lobby'|'leaderboard'|'random'|'custom';
 const lobbies=new WeakMap<HTMLElement,{root:HTMLElement;open:()=>void;dispose:()=>void}>();
@@ -14,17 +15,25 @@ export function showOnlineLobby(container:HTMLElement,onMatch:(info:MatchInfo,cl
  const content=h('div',{class:'online-content'});
  const title=h('h2',{},initialView==='custom'?'CUSTOM MATCHES':initialView==='random'?'RANDOM MATCH':'BORDERWARS ONLINE');
  const onAccountChange=()=>{void sessionUser().then(user=>{if(neonAuth&&!user)dispose();}).catch(()=>{});};
- const open=()=>{root.style.display='';resume.style.display='none';};
+ const parked=()=>!!client&&(queued||!!room)&&!started;
+ const park=()=>{if(parked())resume.classList.add('show');else resume.classList.remove('show');};
+ const open=()=>{root.style.display='';resume.classList.remove('show');};
  const dispose=()=>{client?.send({type:'leave'});client?.close();root.remove();resume.remove();lobbies.delete(container);clearInterval(timer);clearInterval(poll);window.removeEventListener('borderwars-account-change',onAccountChange);};
- const close=()=>{if(client){root.style.display='none';resume.style.display='';}else dispose();};
- const resume=h('button',{class:'online-resume',style:'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:1000;display:none',onClick:open},'Return to lobby');
+ const close=()=>{if(parked()){root.style.display='none';park();}else if(client){root.style.display='none';resume.classList.remove('show');}else dispose();};
+ const resumeTime=h('span',{class:'online-resume-time'});
+ const resume=h('button',{class:'online-resume',type:'button','aria-live':'polite',title:'Open the match lobby',onClick:open},
+  h('span',{class:'online-resume-kicker'},'In queue'),
+  h('span',{class:'online-resume-label'},'Return to lobby'),
+  resumeTime,
+ );
  const root=h('div',{class:'online-overlay'},h('section',{class:'online-panel'},h('div',{class:'online-heading'},title,h('button',{onClick:close},'Close')),status,content));
  container.append(root,resume);window.addEventListener('borderwars-account-change',onAccountChange);lobbies.set(container,{root,open,dispose});
  const error=(e:unknown)=>{status.textContent=e instanceof Error?e.message:String(e);};
  const run=(fn:()=>Promise<void>)=>()=>{void fn().catch(error);};
  const timer=window.setInterval(()=>{
   if(!root.isConnected){clearInterval(timer);resume.remove();if(lobbies.get(container)?.root===root)lobbies.delete(container);window.removeEventListener('borderwars-account-change',onAccountChange);if(!started)client?.close();return;}
-  resume.textContent=room?.countdownAt?`Return to lobby · ${Math.max(0,Math.ceil((room.countdownAt-Date.now()-offset)/1000))}s`:'Return to lobby';
+  resumeTime.textContent=room?.countdownAt?`${Math.max(0,Math.ceil((room.countdownAt-Date.now()-offset)/1000))}s`:room?'Waiting':'Queued';
+  resume.classList.toggle('waiting',!room?.countdownAt);
   const clock=content.querySelector('.online-countdown');
   if(clock&&room){const seconds=Math.max(0,Math.ceil((room.countdownAt-Date.now()-offset)/1000));clock.textContent=room.phase==='loading'?'Preparing everyone’s world…':room.countdownAt?`Match starts in ${seconds}s`:room.kind==='random'?'Preparing countdown…':'Waiting for the host';}
  },250);
@@ -47,16 +56,16 @@ export function showOnlineLobby(container:HTMLElement,onMatch:(info:MatchInfo,cl
   const worlds=savedWorlds(),world=h('select',{'aria-label':'Match world'},h('option',{value:''},'Earth'),...worlds.map(w=>h('option',{value:w.id,disabled:w.recipe.resolution>2048},`${w.recipe.name} · ${w.recipe.resolution}px${w.recipe.resolution>2048?' (solo only)':''}`)));
   const name=h('input',{'aria-label':'Match name',placeholder:'My custom match',maxLength:40});
   const field=(label:string,node:HTMLElement)=>h('label',{class:'online-field'},h('span',{},label),node);
-  const nations=h('input',{type:'number',min:0,max:20,value:6,'aria-label':'AI nations'}),bots=h('input',{type:'number',min:0,max:20,value:4,'aria-label':'AI tribes'});
+  const players=h('input',{type:'number',min:2,max:MAX_PLAYERS,value:50,'aria-label':'Players'});
   const minutes=h('select',{'aria-label':'Match duration'},...[15,30,45,60].map(n=>h('option',{value:n,selected:n===30},`${n} minutes`)));
   const gold=h('select',{'aria-label':'Gold income'},...[1,1.5,2,3].map(n=>h('option',{value:n},`${n}×`)));
   const nukes=h('input',{type:'checkbox',checked:true}),privacy=h('input',{type:'checkbox'});
   const create=h('button',{onClick:()=>{
    if(!client?.connected)return;const recipe=worlds.find(w=>w.id===world.value)?.recipe;
    create.disabled=true;status.textContent=recipe?'Generating the shared world…':'Creating lobby…';
-   client.send({type:'create',private:privacy.checked,settings:{name:name.value||recipe?.name||'Custom Earth',customWorld:recipe,numNations:Number(nations.value),numBots:Number(bots.value),maxTimerMinutes:Number(minutes.value),goldMultiplier:Number(gold.value),disableNukes:!nukes.checked}});
+   client.send({type:'create',private:privacy.checked,settings:{name:name.value||recipe?.name||'Custom Earth',customWorld:recipe,numPlayers:Number(players.value),maxTimerMinutes:Number(minutes.value),goldMultiplier:Number(gold.value),disableNukes:!nukes.checked}});
   }},'Create match');
-  content.replaceChildren(field('Match name',name),field('World',world),h('p',{},'Saved World Forge maps appear here. Online worlds support up to 2048px. Everyone receives the same generated world.'),field('AI nations',nations),field('AI tribes',bots),field('Duration',minutes),field('Gold income',gold),field('Allow nukes',nukes),field('Private · join by code',privacy),h('div',{class:'online-actions'},create,h('button',{onClick:()=>{creating=false;client?.send({type:'list'});}},'Back')));
+  content.replaceChildren(field('Match name',name),field('World',world),h('p',{},'Saved World Forge maps appear here. Online worlds support up to 2048px. Everyone receives the same generated world.'),field('Players',players),field('Duration',minutes),field('Gold income',gold),field('Allow nukes',nukes),field('Private · join by code',privacy),h('div',{class:'online-actions'},create,h('button',{onClick:()=>{creating=false;client?.send({type:'list'});}},'Back')));
  }
  function list(rooms:any[]){
   if(room||creating||view==='leaderboard')return;
@@ -72,19 +81,22 @@ export function showOnlineLobby(container:HTMLElement,onMatch:(info:MatchInfo,cl
   room=r;creating=false;offset=r.serverTime-Date.now();const me=r.members.find((m:any)=>m.id===client?.profile?.id);title.textContent=r.name;
   status.textContent=`${r.private?'Private':'Public'} · ${r.kind==='random'?'Random matchmaking':'Custom · unranked'} · ${r.members.length}/${r.capacity} players`;
   const s=r.settings;
-  content.replaceChildren(h('div',{class:'online-countdown',role:'timer'},r.countdownAt?'Starting soon…':'Waiting for players…'),h('p',{class:'online-rules'},`${s.customWorld?.name??'Earth'} · ${s.numNations} nations · ${s.numBots} tribes · ${s.goldMultiplier}× gold · ${s.disableNukes?'No nukes':'Nukes on'} · ${s.maxTimerMinutes} min`),h('p',{},'Invite friends with this room code'),h('div',{class:'online-code'},r.id),h('div',{class:'online-roster'},...r.members.map((m:any)=>h('div',{class:'online-player'},h('span',{class:'online-player-dot',style:`background:${m.color}`}),h('strong',{},m.name),h('span',{},`${m.id===r.host?'Host · ':''}${m.connected?(m.ready?'Ready':'Not ready'):'Disconnected'}`)))));
-  if(r.phase==='lobby')content.append(h('div',{class:'online-actions'},...(r.kind==='custom'?[h('button',{onClick:()=>client?.send({type:'ready',ready:!me?.ready})},me?.ready?'Not ready':'Ready'),h('button',{disabled:r.host!==client?.profile?.id||r.members.length<1||r.members.some((m:any)=>!m.ready||!m.connected),onClick:()=>client?.send({type:'start'})},'Start match')]:[]),h('button',{onClick:()=>client?.send({type:'leave'})},'Leave')));
-  if(r.kind==='random')content.append(h('p',{},'Starts 60 seconds after the first player joins. AI opponents fill empty player slots. Closing this window keeps you in the lobby.'));
+  const rules=r.kind==='random'
+    ? `${s.customWorld?.name??'Earth'} · 50–100 players · ${s.goldMultiplier}× gold · ${s.disableNukes?'No nukes':'Nukes on'} · ${s.maxTimerMinutes} min`
+    : `${s.customWorld?.name??'Earth'} · ${rosterSize(s)} players · ${s.goldMultiplier}× gold · ${s.disableNukes?'No nukes':'Nukes on'} · ${s.maxTimerMinutes} min`;
+  content.replaceChildren(h('div',{class:'online-countdown',role:'timer'},r.countdownAt?'Starting soon…':'Waiting for players…'),h('p',{class:'online-rules'},rules),h('p',{},'Invite friends with this room code'),h('div',{class:'online-code'},r.id),h('div',{class:'online-roster'},...r.members.map((m:any)=>h('div',{class:'online-player'},h('span',{class:'online-player-dot',style:`background:${m.color}`}),h('strong',{},m.name),h('span',{},`${m.id===r.host?'Host · ':''}${m.connected?(m.ready?'Ready':'Not ready'):'Disconnected'}`)))));
+  if(r.phase==='lobby')content.append(h('div',{class:'online-actions'},...(r.kind==='custom'?[h('button',{onClick:()=>client?.send({type:'ready',ready:!me?.ready})},me?.ready?'Not ready':'Ready'),h('button',{disabled:r.host!==client?.profile?.id||r.members.length<1||r.members.some((m:any)=>!m.ready||!m.connected),onClick:()=>client?.send({type:'start'})},'Start match')]:[]),h('button',{onClick:()=>{queued=false;room=null;park();client?.send({type:'leave'});}},'Leave')));
+  if(r.kind==='random')content.append(h('p',{},'Starts 60 seconds after the first player joins. Up to 35 real players; AI fills the globe to 50–100. Closing this window keeps you in the lobby.'));
  }
  function connect(token:string){
   if(!root.isConnected)return;client?.close();client=new OnlineClient(token);status.textContent='Connecting to the match server…';
   client.on(m=>{
    if(m.type==='welcome'||m.type==='rooms')list(m.rooms);
    if(m.type==='room')showRoom(m.room);
-   if(m.type==='left'){room=null;queued=false;view=initialView==='random'?'lobby':initialView;client?.send({type:'list'});}
+   if(m.type==='left'){room=null;queued=false;view=initialView==='random'?'lobby':initialView;park();client?.send({type:'list'});}
    if(m.type==='error'){status.textContent=m.message;content.querySelectorAll('button').forEach(b=>{if(b.textContent==='Create match')b.disabled=false;});}
    if(m.type==='connection')status.textContent=m.status;
-   if(m.type==='aborted'){room=null;queued=false;view='lobby';status.textContent=m.message;client?.send({type:'list'});}
+   if(m.type==='aborted'){room=null;queued=false;view='lobby';park();status.textContent=m.message;client?.send({type:'list'});}
    if(m.type==='match'&&!started){started=true;root.remove();resume.remove();lobbies.delete(container);clearInterval(timer);clearInterval(poll);window.removeEventListener('borderwars-account-change',onAccountChange);onMatch(m.info,client!);}
   });
  }

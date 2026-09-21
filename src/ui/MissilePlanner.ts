@@ -12,7 +12,7 @@ export class MissilePlanner {
   }
   update(armed:boolean,planning:boolean,count:number,queued:boolean):void {
     this.el.hidden=!armed&&!queued;
-    this.label.textContent=queued?`${count} missiles queued · waiting for ready silos`:planning?`${count} targets marked · click land to add`:'Choose a target, or plan a salvo';
+    this.label.textContent=queued?`${count} missiles queued · launching as silos free up`:planning?`${count} targets marked · click land to add`:'Choose a target, or plan a salvo';
     this.mark.hidden=planning||queued;this.undo.hidden=!planning||queued;this.launch.hidden=!planning||queued;
     (this.launch as HTMLButtonElement).disabled=count===0;
     (this.undo as HTMLButtonElement).disabled=count===0;

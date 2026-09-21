@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {customMatch,randomMatch,RANDOM_PRESETS} from '../src/multiplayer/matchmaking.ts';
+import {customMatch,fillRandomRoster,randomMatch,RANDOM_PRESETS,RANDOM_MAX_PLAYERS,RANDOM_MIN_PLAYERS} from '../src/multiplayer/matchmaking.ts';
 import {DEFAULT_RECIPE,generateWorld} from '../src/map/generator.ts';
 import {Room} from '../server/room.ts';
 import {GameMap} from '../src/core/GameMap.ts';
@@ -16,10 +16,21 @@ test('random countdown starts with one player, survives departures and transfers
 });
 test('random presets vary but never enable cheats; custom settings are bounded and server-owned',()=>{
  assert.equal(new Set(RANDOM_PRESETS.map((_,i)=>randomMatch(i).name)).size,RANDOM_PRESETS.length);
- for(let i=0;i<10;i++){const s=randomMatch(i).settings;assert.equal(s.devMode,false);assert.equal(s.infiniteGold,false);assert.equal(s.infiniteTroops,false);assert.equal(s.startingGold,0);}
+ for(let i=0;i<10;i++){const s=randomMatch(i).settings;assert.equal(s.devMode,false);assert.equal(s.infiniteGold,false);assert.equal(s.infiniteTroops,false);assert.equal(s.startingGold,0);assert.equal(s.genericAi,true);}
  const c=customMatch({name:'Isles',numBots:3,goldMultiplier:2,devMode:true,infiniteTroops:true,customWorld:{...DEFAULT_RECIPE,resolution:512}});
  assert.equal(c.settings.numBots,3);assert.equal(c.settings.devMode,false);assert.equal(c.settings.infiniteTroops,false);assert.equal(c.recipe.resolution,512);
  for(const input of [{numBots:1000},{numNations:NaN},{goldMultiplier:0},{disableNukes:'false'},{customWorld:{...DEFAULT_RECIPE,resolution:4096}}])assert.throws(()=>customMatch(input));
+});
+test('random matches always fill to 50-100 players after humans take seats',()=>{
+ for(const humans of [1,3,8,35]){
+  for(const seed of [0,1,7,50,99,1000]){
+   const filled=fillRandomRoster(randomMatch(seed).settings,humans);
+   const total=humans+filled.numNations+filled.numBots;
+   assert.ok(total>=RANDOM_MIN_PLAYERS&&total<=RANDOM_MAX_PLAYERS,`humans=${humans} seed=${seed} total=${total}`);
+   assert.equal(filled.numNations,0);
+   assert.equal(filled.genericAi,true);
+  }
+ }
 });
 test('shared custom maps retain terrain, borders and palette metadata after transmission',()=>{
  const m=generateWorld({...DEFAULT_RECIPE,resolution:512,countries:8});
@@ -38,11 +49,16 @@ test('custom host countdown requires readiness and cancels when someone unreadie
 test('one-player random matches fill vacant slots with AI and still wait for loading',async()=>{
  const r=new Room('solo','a',false,map,'hash',async()=>{});r.kind='random';r.settings=randomMatch(0).settings;r.join(peer('a'));
  r.countdownAt=Date.now()-1;r.tick();await new Promise(resolve=>setTimeout(resolve,30));
- assert.equal(r.phase,'loading');assert.equal(r.info.members.length,1);assert.equal(r.info.settings.numNations,7);
+ assert.equal(r.phase,'loading');assert.equal(r.info.members.length,1);
+ const total=1+r.info.settings.numNations+r.info.settings.numBots;
+ assert.ok(total>=50&&total<=100,`expected 50-100 players, got ${total}`);
+ assert.equal(r.info.settings.numNations,0);
+ assert.equal(r.info.settings.genericAi,true);
+ assert.ok(r.game.allPlayers().filter(p=>p.type!=='human').every(p=>!p.hasSpawned));
  assert.equal(r.game.ticks,0);r.loaded('a',0);r.tick();assert.equal(r.game.ticks,1);
 });
 test('empty random lobby cancels countdown; solo custom matches get an AI opponent',async()=>{
  const r=new Room('empty','a',false,map,'hash',async()=>{});r.kind='random';r.join(peer('a'));r.leave('a');assert.equal(r.countdownAt,0);
  const c=new Room('solo-custom','a',false,map,'hash',async()=>{});c.settings.numNations=0;c.settings.numBots=0;c.join(peer('a'));c.setReady('a',true);c.requestStart('a');
- assert.ok(c.countdownAt>Date.now());await c.start('a');assert.equal(c.info.settings.numBots,1);assert.equal(c.phase,'loading');
+ assert.ok(c.countdownAt>Date.now());await c.start('a');assert.equal(c.info.settings.numBots,1);assert.equal(c.info.settings.numNations,0);assert.equal(c.phase,'loading');
 });

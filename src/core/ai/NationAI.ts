@@ -30,28 +30,28 @@ export class NationAI implements Execution {
 
   constructor(
     readonly player: Player,
-    private spawnTile: TileRef,
+    private spawnTile: TileRef = -1,
   ) {}
 
   init(game: Game): void {
     this.game = game;
     this.random = new PseudoRandom(game.config.settings.seed * 131 + this.player.smallID * 17 + 5);
-    this.triggerRatio = this.random.nextInt(50, 60) / 100;
-    this.reserveRatio = this.random.nextInt(30, 40) / 100;
-    this.expandRatio = this.random.nextInt(10, 20) / 100;
-    this.aggression = 0.6 + this.random.next() * 0.8;
+    this.triggerRatio = this.random.nextInt(36, 48) / 100;
+    this.reserveRatio = this.random.nextInt(16, 26) / 100;
+    this.expandRatio = this.random.nextInt(8, 14) / 100;
+    this.aggression = 0.95 + this.random.next() * 0.55;
     switch (game.config.difficulty) {
       case Difficulty.Easy:
-        this.attackRate = this.random.nextInt(65, 100);
+        this.attackRate = this.random.nextInt(42, 68);
         break;
       case Difficulty.Medium:
-        this.attackRate = this.random.nextInt(55, 70);
+        this.attackRate = this.random.nextInt(34, 50);
         break;
       case Difficulty.Hard:
-        this.attackRate = this.random.nextInt(45, 60);
+        this.attackRate = this.random.nextInt(26, 40);
         break;
       case Difficulty.Impossible:
-        this.attackRate = this.random.nextInt(30, 50);
+        this.attackRate = this.random.nextInt(18, 32);
         break;
     }
     this.attackRate = Math.round(this.attackRate * game.config.aiCadence());
@@ -70,7 +70,7 @@ export class NationAI implements Execution {
     const game = this.game;
     const p = this.p;
     if (game.inSpawnPhase()) {
-      // The roster is already placed during loading; wait for the countdown.
+      // SpawnTimerExecution places AI during the countdown.
       return;
     }
     if (game.devFreezeAi) return;
@@ -81,8 +81,7 @@ export class NationAI implements Execution {
     }
     if (!this.firstAttackSent) {
       this.firstAttackSent = true;
-      const home = p.countryId;
-      game.addExecution(new AttackExecution(p.troops * 0.5, p, null, game.borderContact(p, 0, home)));
+      this.expandNeutral(0.22);
       return;
     }
     const offset = game.ticks % this.attackRate;
@@ -90,6 +89,9 @@ export class NationAI implements Execution {
       const third = Math.floor(this.attackRate / 3);
       if (offset === (this.attackTick + third) % this.attackRate || offset === (this.attackTick + 2 * third) % this.attackRate) {
         this.handleStructures();
+      }
+      if (this.early() && offset % Math.max(6, Math.floor(this.attackRate / 5)) === this.attackTick % Math.max(6, Math.floor(this.attackRate / 5))) {
+        this.expandNeutral(0.2);
       }
       return;
     }
@@ -127,25 +129,39 @@ export class NationAI implements Execution {
     if (t >= 0) game.spawnPlayer(this.p, t);
   }
 
+  private ageSeconds(): number {
+    if (this.p.spawnedAt < 0) return 0;
+    return (this.game.ticks - this.p.spawnedAt) / 10;
+  }
+  private early(): boolean {
+    return this.ageSeconds() < 90;
+  }
+  private expanding(): boolean {
+    return this.p.outgoingAttacks.some((a) => a.isActive() && a.target === null);
+  }
+  /** Small repeated bites of empty land so the opening looks like a player growing the border. */
+  private expandNeutral(share = 0.28): boolean {
+    if (this.expanding()) return false;
+    const p = this.p;
+    const game = this.game;
+    const { invaders, neutralHome } = game.homeFront(p);
+    const emptyLeft = p.countryId !== 0 && game.unownedInCountry(p.countryId) > 0;
+    const around = game.neighbors(p);
+    if (!neutralHome && !emptyLeft && !around.neutral && invaders.length === 0) return false;
+    return this.sendAttack(null, false, share);
+  }
+
   // ---------------- attacking ----------------
   private maybeAttack(): void {
     const game = this.game;
     const p = this.p;
-    if (p.outgoingAttacks.some((a) => a.isActive() && a.target === null)) return;
+    if (this.expandNeutral(this.early() ? 0.24 : 0.32)) return;
 
-    const { invaders, neutralHome } = game.homeFront(p);
-    const emptyLeft = p.countryId !== 0 && game.unownedInCountry(p.countryId) > 0;
+    const { invaders } = game.homeFront(p);
     const around = game.neighbors(p);
-
-    // fill home first, then flood into any bordering empty land like OpenFront
-    if (neutralHome || emptyLeft || around.neutral) {
-      this.sendAttack(null);
-      return;
-    }
-
     const enemies = (around.players.length ? around.players : invaders).filter((n) => !p.isFriendly(n));
     if (enemies.length === 0) {
-      if (this.random.chance(4)) this.attackWithRandomBoat();
+      if (this.random.chance(3)) this.attackWithRandomBoat();
       return;
     }
     const incoming = this.findIncomingAttacker(enemies);
@@ -155,7 +171,7 @@ export class NationAI implements Execution {
     }
     this.maybeSendAllianceRequests(enemies);
     this.attackBestTarget([], enemies);
-    if (this.random.chance(3)) this.attackWithRandomBoat(enemies);
+    if (this.random.chance(this.early() ? 2 : 3)) this.attackWithRandomBoat(enemies);
   }
 
   private maxPop(): number {
@@ -178,7 +194,7 @@ export class NationAI implements Execution {
       return;
     }
     if (!this.hasReserve()) return;
-    if (!this.hasTrigger() && !this.random.chance(10)) return;
+    if (!this.hasTrigger() && !this.random.chance(this.early() ? 3 : 6)) return;
 
     // 1) whoever is attacking us the hardest (ignore bots unless nothing else)
     const incoming = this.findIncomingAttacker(enemies);
@@ -201,10 +217,11 @@ export class NationAI implements Execution {
     }
     const others = enemies.filter((e) => e.type !== PlayerType.Bot);
     if (others.length === 0) return;
+    others.sort((a, b) => a.troops / Math.max(1, a.numTiles) - b.troops / Math.max(1, b.numTiles));
     const target = others[0];
     const ratio = p.troops / Math.max(1, target.troops);
-    const threshold = this.hard ? 1.2 / this.aggression : 1.6 / this.aggression;
-    if (ratio >= threshold || (p.relation(target) === Relation.Distrustful && this.random.chance(3))) {
+    const threshold = this.hard ? 0.9 / this.aggression : 1.15 / this.aggression;
+    if (ratio >= threshold || (p.relation(target) <= Relation.Distrustful && this.random.chance(2))) {
       if (target.isHuman() && game.ticks - target.spawnedAt < game.config.spawnImmunityTicks()) return;
       this.sendAttack(target);
     }
@@ -225,15 +242,21 @@ export class NationAI implements Execution {
     return best;
   }
 
-  private sendAttack(target: Player | null, urgent = false): boolean {
+  private sendAttack(target: Player | null, urgent = false, share?: number): boolean {
     const p = this.p;
     const game = this.game;
     const max = this.maxPop();
     const keep = max * (target && !urgent ? this.reserveRatio : this.expandRatio);
-    let troops = p.troops - keep;
-    if (target && target.type !== PlayerType.Bot) troops = Math.min(troops, p.troops * 0.6);
-    if (troops < 100) return false;
-    if (target && this.hard && troops < target.troops * 0.2) return false;
+    let troops: number;
+    if (target === null) {
+      const bite = Math.max(80, p.troops * (share ?? (this.early() ? 0.22 : 0.3)));
+      troops = Math.min(p.troops - keep, bite);
+    } else {
+      troops = p.troops - keep;
+      if (target.type !== PlayerType.Bot) troops = Math.min(troops, p.troops * (urgent ? 0.7 : 0.55));
+    }
+    if (troops < 80) return false;
+    if (target && this.hard && troops < target.troops * 0.15) return false;
     if (target && p.isFriendly(target)) return false;
     const clipHome = target === null && p.countryId !== 0 && game.unownedInCountry(p.countryId) > 0;
     game.addExecution(new AttackExecution(troops, p, target, game.borderContact(p, target ? target.smallID : 0, clipHome ? p.countryId : 0)));
@@ -575,7 +598,7 @@ export class NationAI implements Execution {
     const p = this.p;
     const cfg = game.config;
     if (cfg.settings.disableNukes || cfg.difficulty === Difficulty.Easy) return;
-    const silos = p.unitsOf(UnitType.MissileSilo).filter((s) => s.cooldownUntil <= game.ticks);
+    const silos = p.unitsOf(UnitType.MissileSilo).filter((s) => !s.constructing && s.cooldownUntil <= game.ticks);
     if (silos.length === 0) return;
     if (game.ticks - this.lastNukeAt < (cfg.difficulty === Difficulty.Medium ? 240 : 120) * 10) return;
     const { players: neighbors } = game.neighbors(p);
@@ -607,7 +630,6 @@ export class NationAI implements Execution {
     const game = this.game;
     const map = game.map;
     const { outer } = game.config.nukeMagnitude(type);
-    const range = game.config.nukeTargetableRange();
     const safe = (t: TileRef): boolean => {
       // no own / allied tiles within the blast radius (sampled ring + centre)
       const cx = map.x(t);
@@ -626,7 +648,7 @@ export class NationAI implements Execution {
       }
       return true;
     };
-    const inRange = (t: TileRef) => silos.some((s) => map.dist(s.tile, t) <= range * (1 + 0.5 * (s.level - 1)));
+    const inRange = (t: TileRef) => silos.some((s) => game.siloCanReach(s, t));
     // prefer structures
     const structures = target.units.filter((u) => u.isStructure() && u.active);
     this.random.shuffle(structures);

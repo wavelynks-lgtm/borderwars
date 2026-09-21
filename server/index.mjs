@@ -1,5 +1,6 @@
 import {createAuthenticator} from './auth.mjs';
 import {Worker} from 'node:worker_threads';
+import {MAX_HUMANS} from '../src/core/types.ts';
 import {customMatch,randomMatch} from '../src/multiplayer/matchmaking.ts';
 import {Commerce} from "./commerce.mjs";
 import http from 'node:http';
@@ -107,7 +108,7 @@ wss.on('connection',(ws,req)=>{
    case 'list':send(ws,{type:'rooms',rooms:list()});break;
    case 'queue':{
     if(room)throw new Error('Leave your current room first');
-    room=[...rooms.values()].find(r=>r.kind==='random'&&r.phase==='lobby'&&r.members.length<8)??await createRoom(profile,'random',false,{});
+    room=[...rooms.values()].find(r=>r.kind==='random'&&r.phase==='lobby'&&r.members.length<MAX_HUMANS)??await createRoom(profile,'random',false,{});
     room.join(peer());break;
    }
    case 'create':{

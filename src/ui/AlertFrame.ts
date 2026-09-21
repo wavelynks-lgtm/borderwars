@@ -11,10 +11,28 @@ const NUKE_RANK: Record<string, number> = {
   [UnitType.AtomBomb]: 1,
 };
 
+const STORAGE_KEY = "borderwars.missileAlerts";
+
+export function missileAlertsEnabled(): boolean {
+  try {
+    return localStorage.getItem(STORAGE_KEY) !== "off";
+  } catch {
+    return true;
+  }
+}
+
+export function setMissileAlertsEnabled(on: boolean): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, on ? "on" : "off");
+  } catch {
+    /* still playable without storage */
+  }
+}
+
 /**
  * Screen flash for the local player:
  *  - red while a land attack is hitting them
- *  - yellow + centered warning while a missile is inbound (dismissable)
+ *  - yellow + centered warning while a missile is inbound (dismissable / hideable)
  */
 export class AlertFrame {
   readonly el: HTMLElement;
@@ -24,6 +42,8 @@ export class AlertFrame {
   private title: HTMLElement;
   private sub: HTMLElement;
   private closeBtn: HTMLButtonElement;
+  private hideBtn: HTMLButtonElement;
+  private restoreBtn: HTMLButtonElement;
   private kind: "attack" | "nuke" | "betrayal" | null = null;
   private bannerKey = "";
   private betrayalUntil = 0;
@@ -38,16 +58,30 @@ export class AlertFrame {
     this.kicker = h("div", { class: "alert-banner-kicker" }, "INCOMING");
     this.title = h("div", { class: "alert-banner-title" }, "NUKE");
     this.sub = h("div", { class: "alert-banner-sub" });
-    this.closeBtn = h("button", { class: "alert-banner-close", type: "button", title: "Dismiss" }, "×") as HTMLButtonElement;
+    this.closeBtn = h("button", { class: "alert-banner-close", type: "button", title: "Dismiss this launch" }, "×") as HTMLButtonElement;
     this.closeBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
       this.dismissNuke();
     });
-    this.banner = h("div", { class: "alert-banner" }, this.closeBtn, this.kicker, this.title, this.sub);
+    this.hideBtn = h("button", { class: "alert-banner-hide", type: "button" }, "Hide missile alerts") as HTMLButtonElement;
+    this.hideBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setMissileAlertsEnabled(false);
+      this.dismissedSig = "";
+      this.syncMute();
+    });
+    this.restoreBtn = h("button", { class: "missile-alert-chip", type: "button", hidden: true }, "Missile alerts off · click to show") as HTMLButtonElement;
+    this.restoreBtn.addEventListener("click", () => {
+      setMissileAlertsEnabled(true);
+      this.syncMute();
+    });
+    this.banner = h("div", { class: "alert-banner" }, this.closeBtn, this.kicker, this.title, this.sub, h("div", { class: "alert-banner-actions" }, this.hideBtn));
     this.frame = h("div", { class: "alert-wash" });
     this.el = h("div", { class: "alert-root" }, this.frame, this.banner);
-    container.appendChild(this.el);
+    container.append(this.el, this.restoreBtn);
+    this.syncMute();
     const prevBreak = game.onAllianceBroken;
     game.onAllianceBroken = (breaker, other) => {
       prevBreak?.(breaker, other);
@@ -77,9 +111,11 @@ export class AlertFrame {
     }
     if (inbound.length) {
       inbound.sort((a, b) => (NUKE_RANK[b.type] ?? 0) - (NUKE_RANK[a.type] ?? 0) || a.id - b.id);
+      const muted = !missileAlertsEnabled();
       const sig = inbound.map((u) => u.id).join(",");
-      if (sig === this.dismissedSig) {
-        this.setKind(null);
+      if (!muted && sig === this.dismissedSig) {
+        this.setKind("nuke");
+        this.el.classList.add("muted");
         this.setBanner("", "", "");
         return;
       }
@@ -90,6 +126,10 @@ export class AlertFrame {
       const n = inbound.length;
       const who = worst.owner.name;
       this.setKind("nuke");
+      if (muted) {
+        this.setBanner("", "", "");
+        return;
+      }
       this.setBanner(
         n > 1 ? `${n} INCOMING` : "INCOMING",
         unitLabel(worst.type).toUpperCase(),
@@ -122,14 +162,24 @@ export class AlertFrame {
     }
     ids.sort((a, b) => a - b);
     this.dismissedSig = ids.join(",");
-    this.setKind(null);
+    this.setKind("nuke");
+    this.el.classList.add("muted");
     this.setBanner("", "", "");
   }
 
+  private syncMute(): void {
+    this.el.classList.toggle("muted", !missileAlertsEnabled());
+    this.restoreBtn.hidden = missileAlertsEnabled();
+  }
+
   private setKind(kind: "attack" | "nuke" | "betrayal" | null): void {
-    if (kind === this.kind) return;
+    if (kind === this.kind) {
+      if (kind === "nuke") this.el.classList.toggle("muted", !missileAlertsEnabled() || !!this.dismissedSig);
+      return;
+    }
     this.kind = kind;
     this.el.className = kind ? `alert-root ${kind}` : "alert-root";
+    if (kind === "nuke" && (!missileAlertsEnabled() || this.dismissedSig)) this.el.classList.add("muted");
     this.frame.className = kind ? `alert-wash ${kind}` : "alert-wash";
   }
 

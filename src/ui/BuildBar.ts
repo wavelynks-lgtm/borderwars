@@ -7,7 +7,7 @@ import { iconImg } from "./icons";
 
 export const UNIT_DESC: Record<UnitType, string> = {
   [UnitType.City]: "Speeds troop growth and adds 25K max pop per level. Click an existing City to stack; a neighboring tile places a new one.",
-  [UnitType.Factory]: "Lays dual-rail tracks to Cities, Docks and Factories inside the white circle. Trains pay gold when they reach a connected City or Dock.",
+  [UnitType.Factory]: "Lays dual-rail tracks to Cities, Docks and Factories inside the white circle. Each City or Dock stop pays 10k gold (25k at a foreign station, 35k at an ally's); extra stops on the same trip also pay. Factory level spawns more trains.",
   [UnitType.DefensePost]: "Attackers inside the coverage circle lose 5× more troops and advance 3× slower. Hover a post to see its range.",
   [UnitType.Port]: "Coastal dock. Tiny ships sail the harbor; trade ships run to other docks for gold. Unlocks Warships.",
   [UnitType.MissileSilo]: "Launches Atom, Hydrogen and MIRV. 9 s reload.",
@@ -203,8 +203,13 @@ export class BuildBar {
     if (!human.alive) return "You have no territory";
     if (!this.game.isDev()) {
       if (type === UnitType.Warship && human.unitCount(UnitType.Port) === 0) return "Requires a Dock";
-      if (NUKES.has(type) && human.unitCount(UnitType.MissileSilo) === 0) return "Requires a Missile Silo";
-      if (NUKES.has(type) && human.unitsOf(UnitType.MissileSilo).every((s) => s.cooldownUntil > this.game.ticks)) return "All silos are reloading";
+      if (NUKES.has(type)) {
+        const silos = human.unitsOf(UnitType.MissileSilo);
+        if (!silos.length) return "Requires a Missile Silo";
+        const done = silos.filter((s) => !s.constructing);
+        if (!done.length) return "Silo still under construction";
+        if (done.every((s) => s.cooldownUntil > this.game.ticks)) return "All silos are reloading";
+      }
       const cost = this.game.config.unitCost(type, this.game.ownedForCost(human, type));
       if (human.gold < cost) return `Not enough gold (${fmt(cost - human.gold)} more)`;
     }

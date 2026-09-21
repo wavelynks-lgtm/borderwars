@@ -10,7 +10,7 @@ import {mountMenuAd,privacyChoices} from "../commerce/ads";
 import {showOnlineLobby,closeOnlineLobby,type LobbyView} from "./OnlineLobby";
 import type {OnlineClient} from "../multiplayer/Client";
 import type {MatchInfo} from "../multiplayer/protocol";
-import { DEFAULT_SETTINGS, Difficulty, GraphicsQuality, MAX_PLAYERS, SETTINGS_REV, UnitType, clampRoster, type GameSettings, type WorldId } from "../core/types";
+import { DEFAULT_SETTINGS, Difficulty, GraphicsQuality, MAX_HUMANS, MAX_PLAYERS, SETTINGS_REV, UnitType, clampAi, clampRoster, rosterSize, type GameSettings, type WorldId } from "../core/types";
 import { currentFeatured, paintWorldPreview, WORLDS, worldDef, type FeaturedMatch } from "../map/worlds";
 import { h } from "./dom";
 
@@ -32,12 +32,15 @@ export function loadSettings(): GameSettings {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<GameSettings>;
-      if (parsed.settingsRev === SETTINGS_REV) {
+      if (parsed.settingsRev === SETTINGS_REV || parsed.settingsRev === 4) {
         return {
           ...DEFAULT_SETTINGS,
           ...parsed,
+          ...clampRoster(parsed.numNations ?? DEFAULT_SETTINGS.numNations, parsed.numBots ?? DEFAULT_SETTINGS.numBots),
           disabledUnits: Array.isArray(parsed.disabledUnits) ? parsed.disabledUnits : [],
           seed: Math.floor(Math.random() * 1e9),
+          genericAi: true,
+          settingsRev: SETTINGS_REV,
           devMode: resolveDevMode(parsed.devMode),
         };
       }
@@ -94,10 +97,10 @@ export function showMenu(container: HTMLElement, onPlay: (s: GameSettings) => vo
   const refreshFeatured = () => {
     const rooms=matchmaking?.rooms??[],random=rooms.find((r:any)=>r.kind==='random');
     worldTitle.textContent=random?.name??'Random Match';worldTag.textContent='ONLINE';
-    popEl.textContent=matchmaking?`${matchmaking.randomPlayers} players joining · up to 8 per match`:(lastPoll?'Match server unavailable':'Connecting to matchmaking…');
+    popEl.textContent=matchmaking?`${matchmaking.randomPlayers} players joining · up to ${MAX_HUMANS} humans per match`:(lastPoll?'Match server unavailable':'Connecting to matchmaking…');
     countEl.textContent=random?.countdownAt?String(Math.max(0,Math.ceil((random.countdownAt-Date.now()-matchmakingOffset)/1000))):'—';
     countLabel.textContent=random?.countdownAt?'STARTS IN':'WAITING FOR PLAYERS';
-    tagRow.replaceChildren(...(random?[`${random.settings.numNations} nations`,`${random.settings.numBots} tribes`,`${random.settings.goldMultiplier}× gold`,random.settings.disableNukes?'No nukes':'Nukes on']:['Random settings','Live multiplayer']).map((t:string)=>h('span',{class:'chip'},t)));
+    tagRow.replaceChildren(...(random?['50–100 players',`${random.settings.goldMultiplier}× gold`,random.settings.disableNukes?'No nukes':'Nukes on']:['Random settings','Live multiplayer']).map((t:string)=>h('span',{class:'chip'},t)));
   };
   void paintWorldPreview(featuredCanvas,'earth');
   refreshFeatured();
@@ -124,7 +127,6 @@ export function showMenu(container: HTMLElement, onPlay: (s: GameSettings) => vo
   const playWorld = (world: WorldId) => {
     finish({
       world,
-      ...clampRoster(world === "mars" ? 19 : draft.numNations, world === "mars" ? 0 : draft.numBots),
       instantBuild: false,
     });
   };
@@ -198,7 +200,7 @@ export function showMenu(container: HTMLElement, onPlay: (s: GameSettings) => vo
         "div",
         { class: "menu-help" },
         h("div", { class: "help-item" }, h("kbd", {}, "Click"), "empty land on your border to claim it. Filling a country or state pays gold and troops based on how much of it you hold."),
-        h("div", { class: "help-item" }, h("kbd", {}, "Drag"), "rotates the globe, wheel zooms. Right-click inspects a nation."),
+        h("div", { class: "help-item" }, h("kbd", {}, "Drag"), "rotates the globe, wheel zooms. Right-click inspects a player."),
         h("div", { class: "help-item" }, h("kbd", {}, "Q / F / W–I"), "or the bottom bar buys a building, then click the globe to place it. Factories lay railways."),
         h("div", { class: "help-item" }, h("kbd", {}, "1 / 2"), "attack ratio · ", h("kbd", {}, "Space"), " terrain · ", h("kbd", {}, "Esc"), " cancel · ", h("kbd", {}, "F3"), " FPS"),
         h("div", { class: "help-item" }, h("kbd", {}, "Shift+R"), "retaliate · ", h("kbd", {}, "\\"), "hide UI"),
@@ -289,7 +291,7 @@ export function showMenu(container: HTMLElement, onPlay: (s: GameSettings) => vo
           customAction,
           action("", "↪", "Quick Play", playFeatured),
           action("", "▣", "Worlds", openWorlds, String(WORLDS.length)),
-          action("", "✦", "World Forge", () => showWorldCreator(container,recipe=>finish({world:"earth",customWorld:recipe,numNations:Math.min(recipe.countries,40),numBots:8,randomSpawn:true}))),
+          action("", "✦", "World Forge", () => showWorldCreator(container,recipe=>finish({world:"earth",customWorld:recipe,...clampAi(Math.min(recipe.countries,49)),randomSpawn:true}))),
         ),
         h(
           "div",
@@ -335,7 +337,7 @@ function fromMatch(base: GameSettings, match: FeaturedMatch): Partial<GameSettin
   return {
     ...base,
     world: match.world,
-    ...clampRoster(match.nations, match.bots),
+    ...clampAi(Math.max(1, match.players - 1)),
     goldMultiplier: match.goldMultiplier,
     randomSpawn: match.randomSpawn,
     instantBuild: match.instantBuild,
@@ -375,22 +377,7 @@ function settingsForm(s: GameSettings): { el: HTMLElement; read: () => Partial<G
     input.oninput = () => (val.textContent = format(Number(input.value)));
     return { input, val };
   };
-  const aiSlots = MAX_PLAYERS - 1;
-  const nations = slider(0, aiSlots, 1, Math.min(aiSlots, s.numNations), (v) => (v === 0 ? "Off" : String(v)));
-  const bots = slider(0, aiSlots, 1, Math.min(aiSlots, s.numBots), (v) => (v === 0 ? "Off" : String(v)));
-  const fitBots = () => {
-    const b = Math.min(Number(bots.input.value), aiSlots - Number(nations.input.value));
-    bots.input.value = String(b);
-    bots.val.textContent = b === 0 ? "Off" : String(b);
-  };
-  const fitNations = () => {
-    const n = Math.min(Number(nations.input.value), aiSlots - Number(bots.input.value));
-    nations.input.value = String(n);
-    nations.val.textContent = n === 0 ? "Off" : String(n);
-  };
-  nations.input.addEventListener("input", fitBots);
-  bots.input.addEventListener("input", fitNations);
-  fitBots();
+  const players = slider(2, MAX_PLAYERS, 1, Math.min(MAX_PLAYERS, Math.max(2, rosterSize(s))), (v) => String(v));
   const win = slider(30, 95, 1, s.winPercent, (v) => `${v}%`);
   const spawn = slider(5, 40, 1, s.spawnPhaseSeconds, (v) => `${v}s`);
   const startGold = slider(0, 10_000_000, 250_000, s.startingGold, (v) =>
@@ -438,8 +425,7 @@ function settingsForm(s: GameSettings): { el: HTMLElement; read: () => Partial<G
     h(
       "div",
       { class: "menu-group" },
-      row("Nations", nations.input, nations.val),
-      row("Tribes", bots.input, bots.val),
+      row("Players", players.input, players.val),
       row("Land to win", win.input, win.val),
       row("Spawn phase", spawn.input, spawn.val),
       row("Start gold", startGold.input, startGold.val),
@@ -454,7 +440,7 @@ function settingsForm(s: GameSettings): { el: HTMLElement; read: () => Partial<G
       row("Dev mode", h("label", { class: "switch-wrap" }, dev, h("span", { class: "switch-track" }))),
     ),
     h("div", { class: "menu-group unit-group" }, h("div", { class: "menu-row" }, h("span", { class: "menu-label" }, "Disable")), h("div", { class: "unit-chips" }, ...unitBtns)),
-    h("div", { class: "menu-hint" }, `At most ${MAX_PLAYERS} players on one globe (you + nations + tribes). Land spreads along the border like OpenFront — extra clicks add troops, they do not flash a new continent.`),
+    h("div", { class: "menu-hint" }, `At most ${MAX_PLAYERS} players on one globe, including you. The rest are AI with random names. Land spreads along the border like OpenFront — extra clicks add troops, they do not flash a new continent.`),
   );
 
   return {
@@ -464,7 +450,8 @@ function settingsForm(s: GameSettings): { el: HTMLElement; read: () => Partial<G
       world: world.get(),
       difficulty: difficulty.get(),
       graphics: gfx.get(),
-      ...clampRoster(Number(nations.input.value), Number(bots.input.value)),
+      ...clampAi(Number(players.input.value) - 1),
+      genericAi: true,
       winPercent: Number(win.input.value),
       spawnPhaseSeconds: Number(spawn.input.value),
       startingGold: Number(startGold.input.value),

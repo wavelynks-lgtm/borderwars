@@ -167,18 +167,19 @@ export function build(game: Game, player: Player, type: UnitType, tile: TileRef,
   const cost = prepaid ? 0 : game.config.unitCost(type, game.ownedForCost(player, type));
 
   if (NUKES.has(type)) {
-    let silo = player
-      .unitsOf(UnitType.MissileSilo)
-      .filter((s) => !s.constructing && s.cooldownUntil <= game.ticks &&
-        (game.isDev() || game.map.dist(s.tile, tile) <= game.config.nukeTargetableRange() * (1 + 0.5 * (s.level - 1))))
+    const silos = player.unitsOf(UnitType.MissileSilo).filter((s) => !s.constructing);
+    const inRange = silos.filter((s) => game.siloCanReach(s, tile));
+    let silo = inRange
+      .filter((s) => s.cooldownUntil <= game.ticks)
       .sort((a, b) => game.map.distSq(a.tile, tile) - game.map.distSq(b.tile, tile))[0];
     if (!silo && game.isDev()) {
       const origin = player.spawnTile >= 0 ? player.spawnTile : tile;
       silo = game.addUnit(UnitType.MissileSilo, player, origin);
     }
-    if (!silo) return { ok: false, message: "All silos are reloading" };
-    if (!game.isDev() && game.map.dist(silo.tile, tile) > game.config.nukeTargetableRange() * (1 + 0.5 * (silo.level - 1))) {
-      return { ok: false, message: "Target out of silo range" };
+    if (!silo) {
+      if (!silos.length) return { ok: false, message: "Requires a Missile Silo" };
+      if (!inRange.length) return { ok: false, message: "Target out of silo range" };
+      return { ok: false, message: "All silos are reloading" };
     }
     if (!prepaid && !game.isDev()) player.removeGold(cost);
     // Reserve now: multiple clicks before the next tick cannot reuse one silo.
@@ -209,8 +210,6 @@ export function queueMissiles(game: Game, player: Player, type: UnitType, target
   for (const [i,tile] of targets.entries()) {
     const error=game.canBuild(player,type,tile,true);
     if(error)return {ok:false,message:error};
-    const reachable=player.unitsOf(UnitType.MissileSilo).some(s=>s.active&&!s.constructing&&(game.isDev()||game.map.dist(s.tile,tile)<=game.config.nukeTargetableRange()*(1+.5*(s.level-1))));
-    if(!reachable)return {ok:false,message:`Target ${i+1} requires a completed silo in range`};
     orders.push({tile,price:game.isDev()?0:game.config.unitCost(type,game.ownedForCost(player,type)+i)});
   }
   const total=orders.reduce((n,o)=>n+o.price,0), extra=total-credit;

@@ -184,6 +184,21 @@ test('workforce slider trades available troops for bounded gold income',()=>{
   close(cfg.goldPerTick({...p,troops:100000,workers:0}),25);
   close(cfg.goldPerTick({...p,troops:0,workers:100000}),175);
 });
+test('train gold follows OpenFront stop rates, not ride length or building level',()=>{
+  const cfg=new Config({...DEFAULT_SETTINGS,goldMultiplier:1});
+  assert.equal(cfg.trainGold('self',0),10_000);
+  assert.equal(cfg.trainGold('self',9),10_000);
+  assert.equal(cfg.trainGold('other',0),25_000);
+  assert.equal(cfg.trainGold('ally',0),35_000);
+  assert.equal(cfg.trainGold('self',10),5_000);
+  assert.equal(cfg.trainGold('self',20),5_000);
+  assert.equal(cfg.trainGold('ally',11),25_000);
+  assert.equal(cfg.trainGold('other',10),20_000);
+  const rich=new Config({...DEFAULT_SETTINGS,goldMultiplier:2});
+  assert.equal(rich.trainGold('self',0),20_000);
+  assert.equal(rich.trainGold('ally',0),70_000);
+  assert.equal(rich.tradeShipGold(0,1),cfg.tradeShipGold(0,1)*2);
+});
 
 test('natural fronts favor open plains over a mountain flank and vary with match seed', () => {
   function run(seed, mountains = true) {
@@ -466,7 +481,25 @@ test('salvo validation requires completed reachable silos and never partially ch
  assert.equal(queueMissiles(game,p,U.AtomBomb,[tile+1]).ok,false);
  const silo=game.addUnit(U.MissileSilo,p,tile);assert.equal(queueMissiles(game,p,U.AtomBomb,[tile+1]).ok,false);
  silo.constructing=false;const balance=p.gold;
- assert.equal(queueMissiles(game,p,U.AtomBomb,[tile+1,map.ref(0,0)]).ok,false);assert.equal(p.gold,balance);
+ const water=map.ref(0,0);map.terrain[water]=T.Water;
+ assert.equal(queueMissiles(game,p,U.AtomBomb,[tile+1,water]).ok,false);assert.equal(p.gold,balance);
+});
+test('built silos report range or reload instead of a false reloading toast',()=>{
+ const {map,game}=world(128,64);const tile=map.ref(10,32);const p=player(game,tile);p.gold=1e7;
+ const silo=game.addUnit(U.MissileSilo,p,tile);
+ assert.equal(build(game,p,U.AtomBomb,map.ref(12,32)).message,'Silo still under construction');
+ game.finishConstruction();
+ assert.equal(silo.constructing,false);assert.ok(silo.cooldownUntil<=game.ticks);
+ const near=build(game,p,U.AtomBomb,map.ref(12,32));
+ assert.equal(near.ok,true);
+ const busy=build(game,p,U.AtomBomb,map.ref(12,32));
+ assert.equal(busy.ok,false);assert.equal(busy.message,'All silos are reloading');
+ silo.cooldownUntil=0;
+ const orig=game.config.nukeTargetableRange.bind(game.config);
+ game.config.nukeTargetableRange=()=>5;
+ const far=build(game,p,U.AtomBomb,map.ref(50,32));
+ assert.equal(far.ok,false);assert.equal(far.message,'Target out of silo range');
+ game.config.nukeTargetableRange=orig;
 });
 test('salvos refund queued missiles when their only silo is destroyed',()=>{
  const {map,game}=world(512,256,T.Plains,{instantBuild:true});const tile=map.ref(200,128),p=player(game,tile);p.gold=1e7;

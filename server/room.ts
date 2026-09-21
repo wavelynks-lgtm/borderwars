@@ -1,7 +1,8 @@
 import type {Cosmetics} from "../src/customization/cosmetics";
 import type {Game} from '../src/core/Game';
-import {DEFAULT_SETTINGS,type GameSettings} from '../src/core/types';
+import {DEFAULT_SETTINGS,MAX_HUMANS,clampAi,type GameSettings} from '../src/core/types';
 import {createOnlineGame} from '../src/multiplayer/setup';
+import {fillRandomRoster} from '../src/multiplayer/matchmaking';
 import {applyCommand,stateDigest,type Command,type Frame,type MatchInfo,type Member} from '../src/multiplayer/protocol';
 import type {GameMap} from '../src/core/GameMap';
 export interface Peer {id:string;name:string;send:(data:unknown)=>void;connected:boolean;cosmetics?:Cosmetics}
@@ -11,16 +12,16 @@ export class Room {
  game:Game|null=null;info:MatchInfo|null=null;frames:Frame[]=[];pending:{id:string;command:Command}[]=[];
  private nextSaveAt=0;
  private ready=new Set<string>();private saving=false;private ended=false;
- kind:'random'|'custom'='custom';name='Custom Earth';countdownAt=0;settings:GameSettings={...DEFAULT_SETTINGS,seed:Math.floor(Math.random()*2**30),numNations:6,numBots:4,spawnPhaseSeconds:15,maxTimerMinutes:30,randomSpawn:true,devMode:false};mapURL='/data/online-earth.bin.gz';
+ kind:'random'|'custom'='custom';name='Custom Earth';countdownAt=0;settings:GameSettings={...DEFAULT_SETTINGS,seed:Math.floor(Math.random()*2**30),numNations:0,numBots:19,spawnPhaseSeconds:15,maxTimerMinutes:30,randomSpawn:true,devMode:false,genericAi:true};mapURL='/data/online-earth.bin.gz';
  created=Date.now();lastActive=Date.now();loadingAt=0;finishedAt=0;
  constructor(readonly id:string,public host:string,readonly privateRoom:boolean,private mapFactory:()=>GameMap,private mapHash:string,private onFinish:(r:Room)=>Promise<void>){ }
- summary(){return {id:this.id,host:this.host,private:this.privateRoom,phase:this.phase,kind:this.kind,name:this.name,settings:this.settings,countdownAt:this.countdownAt,serverTime:Date.now(),members:this.members.map(m=>({...m,connected:!!this.peers.get(m.id)?.connected})),capacity:8};}
+ summary(){return {id:this.id,host:this.host,private:this.privateRoom,phase:this.phase,kind:this.kind,name:this.name,settings:this.settings,countdownAt:this.countdownAt,serverTime:Date.now(),members:this.members.map(m=>({...m,connected:!!this.peers.get(m.id)?.connected})),capacity:MAX_HUMANS};}
  broadcast(data:unknown){for(const p of this.peers.values())if(p.connected)p.send(data);}
  update(){this.broadcast({type:'room',room:this.summary()});}
  join(peer:Peer){
   if(this.forfeited.has(peer.id))throw new Error('You have left this match');
   const existing=this.members.find(m=>m.id===peer.id);
-  if(!existing){if(this.phase!=='lobby')throw new Error('Match already started');if(this.members.length>=8)throw new Error('Room is full');
+  if(!existing){if(this.phase!=='lobby')throw new Error('Match already started');if(this.members.length>=MAX_HUMANS)throw new Error('Room is full');
    if(this.kind==='custom')this.countdownAt=0;
    const colors=['#ff4d6d','#55b8ff','#f8d35e','#a780ff','#62da9b','#f69b52','#ee79cf','#83d9dd'];
    const requested=peer.cosmetics?.color??colors[this.members.length];const color=this.members.some(m=>m.color.toLowerCase()===requested.toLowerCase())?(colors.find(c=>!this.members.some(m=>m.color===c))??colors[this.members.length]):requested;
@@ -50,8 +51,12 @@ export class Room {
    // Preserve each preset's AI population while filling vacant human slots.
    // Send these final settings to every client for deterministic simulation.
    const settings={...this.settings};
-   if(this.kind==='random')settings.numNations=Math.max(settings.numNations,8-this.members.length);
-   else if(this.members.length===1&&settings.numNations+settings.numBots===0)settings.numBots=1;
+   if(this.kind==='random')Object.assign(settings,fillRandomRoster(settings,this.members.length));
+   else{
+    const configured=1+settings.numNations+settings.numBots;
+    const total=Math.max(this.members.length,configured,this.members.length===1&&configured<=1?2:configured);
+    Object.assign(settings,clampAi(total-this.members.length,this.members.length),{genericAi:true});
+   }
    this.settings=settings;
    this.game=await createOnlineGame(this.mapFactory(),settings,this.members,this.members[0].id);
    if(this.phase!=='loading')return;

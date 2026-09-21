@@ -512,11 +512,20 @@ export class Config {
     const rate = (numPlayerFactories + 2) * 4;
     return Math.max(3, Math.floor(rate / this.trainSaturation(numTrains)));
   }
-  /** gold paid when a train stops at a City/Port; both the train owner and a foreign station owner receive it */
+  /**
+   * Gold paid when a train stops at a City/Port. Both the train owner and a
+   * foreign station owner receive the full amount.
+   *
+   * OpenFront pays per stop, not per route: ride length and station level do
+   * not change the payout (longer trips already pay more by hitting more
+   * cities; factory level already spawns more trains). Relationship is the
+   * lever — own 10k, other 25k, ally 35k — with a 5k floor after the 10th stop.
+   */
   trainGold(rel: "self" | "ally" | "other", stopsVisited: number): number {
     const penalised = Math.max(0, stopsVisited - 9);
     const base = rel === "ally" ? 35_000 : rel === "other" ? 25_000 : 10_000;
-    return Math.max(5_000, base - penalised * 5_000);
+    const gold = Math.max(5_000, base - penalised * 5_000);
+    return Math.floor(gold * this.settings.goldMultiplier);
   }
 
   // ---------- nukes / SAM ----------
@@ -604,8 +613,9 @@ export class Config {
   nukeDeathFactor(troops: number, tiles: number): number {
     return (5 * troops) / Math.max(1, tiles);
   }
+  /** Max surface-distance a level-1 silo can fire (220 reference tiles, map-scaled). */
   nukeTargetableRange(): number {
-    return this.range(220);
+    return this.tiles(220);
   }
 
   // ---------- diplomacy ----------
@@ -671,6 +681,6 @@ export class Config {
     return 12 * TICKS_PER_SECOND;
   }
   tradeShipGold(distance: number, portLevel: number): number {
-    return Math.floor((20_000 + (distance / this.k) * 400) * (0.75 + 0.25 * portLevel));
+    return Math.floor((20_000 + (distance / this.k) * 400) * (0.75 + 0.25 * portLevel) * this.settings.goldMultiplier);
   }
 }

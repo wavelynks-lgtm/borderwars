@@ -2,7 +2,8 @@ import type { Game } from "../core/Game";
 import type { Player } from "../core/Player";
 import type { AttackExecution } from "../core/executions/AttackExecution";
 import { fmt, fmtTroops } from "../core/executions/AttackExecution";
-import { MessageType, PlayerType, UnitType, type GameEvent } from "../core/types";
+import { MessageType, UnitType, type GameEvent } from "../core/types";
+import { missileAlertsEnabled } from "./AlertFrame";
 import { clear, h } from "./dom";
 import { namedIcon } from "./icons";
 
@@ -74,7 +75,7 @@ export class Hud {
       h("span", { class: "dot" }),
       game.isDev()
         ? "Click land to spawn · ` cheats · Shift+N skip spawn · Shift-click paint"
-        : "Click on land to choose where your nation starts",
+        : "Click land to choose where you start — AI are picking spots too",
     );
     this.modeHint = h("div", { class: "spawn-hint mode glass", style: "display:none" });
 
@@ -203,7 +204,7 @@ export class Hud {
     const top = alive.slice(0, 8);
     if (human.alive && !top.includes(human)) top.push(human);
     clear(this.leaderboard);
-    this.leaderboard.append(h("div", { class: "panel-title" }, "Leaderboard", h("span", { class: "muted" }, `${alive.length} alive`)));
+    this.leaderboard.append(h("div", { class: "panel-title" }, "Leaderboard", h("span", { class: "muted" }, game.inSpawnPhase() ? `${game.allPlayers().filter((p) => p.hasSpawned).length}/${game.allPlayers().length} players` : `${alive.length} alive`)));
     const list = h("div", { class: "lb-list" });
     const maxLand = Math.max(0.01, game.landPercent(alive[0] ?? human));
     top.forEach((p) => {
@@ -212,7 +213,7 @@ export class Hud {
       list.append(
         h(
           "div",
-          { class: "lb-row" + (p === human ? " me" : "") + (human.isAlliedWith(p) ? " ally" : "") + (p.type === PlayerType.Bot ? " bot" : ""), onClick: () => this.cb.onSelectPlayer(p) },
+          { class: "lb-row" + (p === human ? " me" : "") + (human.isAlliedWith(p) ? " ally" : "") + (p.isAI() ? " bot" : ""), onClick: () => this.cb.onSelectPlayer(p) },
           h("span", { class: "lb-rank" }, String(rank)),
           h("span", { class: "swatch", style: `background:${p.color}` }),
           h("span", { class: "lb-name" }, `${p.flag?p.flag+" ":""}${p.name}${p.cosmetics.badge==='supporter'?" ★":""}`, p.isTraitor(game.ticks) ? " ☠" : ""),
@@ -306,6 +307,7 @@ export class Hud {
       const ev = evs[this.eventCursor];
       if (ev.to !== undefined && ev.to !== human.smallID) continue;
       if (ev.type === MessageType.AttackOutgoing) continue; // shown in the battles box
+      if (ev.type === MessageType.Nuke && !missileAlertsEnabled()) continue;
       this.addEvent(ev);
     }
     if (evs.length > 2000) {

@@ -111,15 +111,25 @@ export enum GraphicsQuality {
 export type WorldId = "earth" | "mars";
 
 /** bump when SP defaults change so old localStorage does not keep custom balance */
-export const SETTINGS_REV = 4;
-/** human + nations + tribes on one globe */
+export const SETTINGS_REV = 5;
+/** humans + AI on one globe */
 export const MAX_PLAYERS = 100;
+/** real commanders in an online room; leftover seats are AI */
+export const MAX_HUMANS = 35;
 
-export function clampRoster(nations: number, bots: number): { numNations: number; numBots: number } {
-  const ai = MAX_PLAYERS - 1;
-  const numNations = Math.max(0, Math.min(ai, Math.floor(nations)));
-  const numBots = Math.max(0, Math.min(ai - numNations, Math.floor(bots)));
-  return { numNations, numBots };
+/** One AI pool. `numNations` is kept on settings for older rooms and always stored as 0. */
+export function clampAi(ai: number, humans = 1): { numNations: number; numBots: number } {
+  const nHumans = Math.max(1, Math.min(MAX_HUMANS, Math.floor(humans)));
+  const numBots = Math.max(0, Math.min(MAX_PLAYERS - nHumans, Math.floor(Number.isFinite(ai) ? ai : 0)));
+  return { numNations: 0, numBots };
+}
+
+export function clampRoster(nations: number, bots: number, humans = 1): { numNations: number; numBots: number } {
+  return clampAi((Number(nations) || 0) + (Number(bots) || 0), humans);
+}
+
+export function rosterSize(settings: { numNations: number; numBots: number }, humans = 1): number {
+  return Math.max(1, Math.floor(humans)) + settings.numNations + settings.numBots;
 }
 
 export interface GameSettings {
@@ -158,14 +168,16 @@ export interface GameSettings {
   world: WorldId;
   /** structures finish the tick they are placed */
   instantBuild: boolean;
+  /** AI uses a gray palette and joke names instead of country names/colors */
+  genericAi: boolean;
 }
 
 export const DEFAULT_SETTINGS: GameSettings = {
   settingsRev: SETTINGS_REV,
   playerName: "Commander",
   difficulty: Difficulty.Easy,
-  numNations: 10,
-  numBots: 9,
+  numNations: 0,
+  numBots: 19,
   winPercent: 80,
   seed: 1,
   spawnPhaseSeconds: 10,
@@ -182,4 +194,5 @@ export const DEFAULT_SETTINGS: GameSettings = {
   waterNukes: false,
   world: "earth",
   instantBuild: false,
+  genericAi: true,
 };

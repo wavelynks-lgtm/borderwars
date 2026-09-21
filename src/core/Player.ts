@@ -113,6 +113,9 @@ export class Player {
   isHuman(): boolean {
     return this.type === PlayerType.Human;
   }
+  isAI(): boolean {
+    return this.type !== PlayerType.Human;
+  }
   isTraitor(tick: number): boolean {
     return this.traitorUntil > tick;
   }

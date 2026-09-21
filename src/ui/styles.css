@@ -410,7 +410,7 @@ input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; border-radius
 .rel-2 { color: var(--text-2); }
 .rel-3 { color: var(--ok); }
 
-/* alert: soft edge wash for land attacks, dismissable banner for inbound nukes */
+/* alert: thick flashing rim for attacks / nukes, dismissable banner for inbound missiles */
 .alert-root {
   position: fixed;
   inset: 0;
@@ -422,24 +422,35 @@ input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; border-radius
   inset: 0;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.35s ease;
+  transition: opacity 0.12s linear;
 }
 .alert-wash.attack {
-  background: transparent;
-  box-shadow: inset 0 0 0 5px rgba(255, 70, 60, 0.35), inset 0 0 80px 24px rgba(255, 50, 40, 0.12);
-  animation: alertPulse 1.6s ease-in-out infinite;
+  background: rgba(255, 16, 8, 0.14);
+  box-shadow:
+    inset 0 0 0 12px rgba(255, 48, 32, 0.95),
+    inset 0 0 90px 36px rgba(255, 30, 16, 0.45),
+    inset 0 0 180px 70px rgba(255, 20, 10, 0.22);
+  animation: alertPulse 0.55s steps(2) infinite;
 }
 .alert-wash.nuke {
-  background: transparent;
-  box-shadow: inset 0 0 0 5px rgba(255, 210, 40, 0.4), inset 0 0 70px 20px rgba(255, 200, 0, 0.1);
-  animation: alertPulse 1.8s ease-in-out infinite;
+  background: rgba(255, 196, 0, 0.12);
+  box-shadow:
+    inset 0 0 0 12px rgba(255, 214, 32, 0.98),
+    inset 0 0 90px 36px rgba(255, 190, 0, 0.42),
+    inset 0 0 180px 70px rgba(255, 160, 0, 0.2);
+  animation: alertPulse 0.5s steps(2) infinite;
 }
 .alert-wash.betrayal {
-  background: transparent;
-  box-shadow: inset 0 0 0 5px rgba(255, 120, 40, 0.35), inset 0 0 70px 20px rgba(255, 90, 0, 0.1);
-  animation: alertPulse 1.6s ease-in-out infinite;
+  background: rgba(255, 90, 20, 0.12);
+  box-shadow:
+    inset 0 0 0 12px rgba(255, 110, 32, 0.95),
+    inset 0 0 90px 36px rgba(255, 80, 0, 0.4);
+  animation: alertPulse 0.55s steps(2) infinite;
 }
-@keyframes alertPulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 0.85; } }
+@keyframes alertPulse { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
+@media(prefers-reduced-motion:reduce){
+  .alert-wash.attack,.alert-wash.nuke,.alert-wash.betrayal{animation:none;opacity:1}
+}
 
 .alert-banner {
   display: none;
@@ -458,6 +469,37 @@ input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; border-radius
   pointer-events: auto;
 }
 .alert-root.nuke .alert-banner { display: block; }
+.alert-root.nuke.muted .alert-banner { display: none; }
+.alert-banner-actions { display: flex; gap: 6px; margin-top: 12px; }
+.alert-banner-hide {
+  font: inherit;
+  font-family: "Press Start 2P", monospace;
+  font-size: 7px;
+  padding: 6px 8px;
+  border: 2px solid #111;
+  background: #1a1408;
+  color: #ffe566;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 #000;
+}
+.alert-banner-hide:hover { background: #332408; }
+.missile-alert-chip {
+  position: absolute;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 41;
+  pointer-events: auto;
+  font-family: "Press Start 2P", monospace;
+  font-size: 7px;
+  padding: 7px 10px;
+  background: #1a1408;
+  color: #ffe566;
+  border: 2px solid #111;
+  box-shadow: 2px 2px 0 #000;
+  cursor: pointer;
+}
+.missile-alert-chip:hover { background: #332408; }
 .alert-banner-close {
   position: absolute;
   top: 6px;
@@ -572,6 +614,30 @@ input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; border-radius
 .online-heading,.online-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.online-heading{justify-content:space-between}.online-heading h2{font-size:20px}
 .online-status{color:#9edaff;line-height:1.6;min-height:24px}.online-content{display:grid;gap:12px}.online-content input{padding:12px;background:#080e19;color:#fff;border:1px solid #64748b;font:inherit;min-width:0}
 .online-panel button{padding:10px 14px;background:#254367;color:white;border:1px solid #6c90b8;font:inherit;cursor:pointer}.online-panel button:hover{background:#356294}.online-panel button:disabled{opacity:.4;cursor:default}.online-code{font-size:32px;letter-spacing:6px;color:#ffd67b}.online-table{width:100%;border-collapse:collapse;text-align:left}.online-table td,.online-table th{padding:10px;border-bottom:1px solid #344258}.online-banner{position:fixed;top:68px;left:50%;transform:translateX(-50%);z-index:100;background:#101b2de8;color:#bde6ff;padding:6px 12px;font-size:12px;pointer-events:none}
+.online-resume{
+  position:fixed;top:6px;right:72px;left:auto;z-index:80;
+  display:none;align-items:center;gap:10px;
+  padding:6px 12px;background:#e8942a;color:#1a1208;border:3px solid #000;box-shadow:3px 3px 0 #000;
+  font:inherit;cursor:pointer;image-rendering:pixelated;
+}
+.online-resume.show{display:flex}
+.online-resume:hover{background:#ffb03a}
+.online-resume:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #000}
+.online-resume-kicker{
+  flex:none;font-family:"Press Start 2P",monospace;font-size:7px;letter-spacing:.06em;text-transform:uppercase;
+  background:#1a1208;color:#ffd67b;padding:6px 7px;border:2px solid #000;
+}
+.online-resume-label{font-family:"Press Start 2P",monospace;font-size:9px;line-height:1.35;white-space:nowrap}
+.online-resume-time{
+  flex:none;min-width:4ch;text-align:right;
+  font-family:"Press Start 2P",monospace;font-size:14px;font-variant-numeric:tabular-nums;
+}
+.online-resume:not(.waiting) .online-resume-time{animation:online-resume-pulse 1s steps(2) infinite}
+@keyframes online-resume-pulse{50%{opacity:.45}}
+@media(prefers-reduced-motion:reduce){.online-resume:not(.waiting) .online-resume-time{animation:none}}
+@media(max-width:720px){
+  .online-resume{top:58px;right:12px;left:12px;justify-content:space-between}
+}
 
 .online-leave{position:fixed;bottom:12px;right:12px;z-index:81;background:#111b2ce8;border:1px solid #65718a;color:#d6dce6;padding:5px 9px;font:inherit;font-size:11px;cursor:pointer;pointer-events:auto}
 

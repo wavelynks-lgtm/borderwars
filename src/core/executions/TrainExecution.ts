@@ -7,8 +7,9 @@ import { UnitType } from "../types";
 
 /**
  * One train: an engine plus carriages riding a concatenated rail path.
- * Gold is paid at every City/Port stop (both the train owner and a foreign
- * station owner receive it). Factories are waypoints only.
+ * Gold is paid at every City/Port stop (relationship + stop count, then the
+ * match gold multiplier). Ride length and station level do not change the
+ * payout. Factories are waypoints only.
  */
 export class TrainExecution implements Execution {
   private active = true;

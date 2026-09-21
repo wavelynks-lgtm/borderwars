@@ -33,7 +33,7 @@ export class DevPanel {
         btn("+100K troops", "Shift+T", () => this.troops(100_000)),
         btn("+1M troops", "", () => this.troops(1_000_000)),
         btn("Skip spawn", "Shift+N", () => this.skipSpawn()),
-        btn("Freeze AI", "Stop nations/bots attacking", () => this.toggleAi()),
+        btn("Freeze AI", "Stop AI attacking", () => this.toggleAi()),
         btn("Finish builds", "", () => this.finish()),
         btn("Starter kit", "City + factory + silo + SAM + radar + port", () => this.kit()),
         btn("Speed ×16", "", () => this.onSpeed(16)),

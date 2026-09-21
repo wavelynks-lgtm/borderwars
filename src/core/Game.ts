@@ -847,6 +847,8 @@ export class Game {
   }
   private completeConstruction(u: Unit): void {
     u.constructing = false;
+    // Construction used cooldownUntil as a lock so the silo could not fire early.
+    if (u.type === UnitType.MissileSilo) u.cooldownUntil = 0;
     if (u.type === UnitType.SAMLauncher) u.samAmmo = u.level;
     if (u.type === UnitType.DefensePost) this.refreshDefenseCover(u.tile);
     this.rail.onStructureCompleted(u);
@@ -993,6 +995,15 @@ export class Game {
     return range;
   }
 
+  siloReach(silo: Unit): number {
+    return this.config.nukeTargetableRange() * (1 + 0.5 * (silo.level - 1));
+  }
+
+  /** Whether a completed silo can fire at `tile` (dev mode ignores range). */
+  siloCanReach(silo: Unit, tile: TileRef): boolean {
+    return this.isDev() || this.map.surfaceDistance(silo.tile, tile) <= this.siloReach(silo);
+  }
+
   /** can `player` build `type` at `tile`? returns error string or null */
   canBuild(player: Player, type: UnitType, tile: TileRef, prepaid = false): string | null {
     const map = this.map;
@@ -1018,11 +1029,14 @@ export class Game {
     }
     if (NUKES.has(type) && type !== UnitType.MIRVWarhead) {
       if (this.config.settings.disableNukes) return "Nukes are disabled";
-      if (!this.isDev()) {
-        if (player.unitCount(UnitType.MissileSilo) === 0) return "Requires a Missile Silo";
-        if (player.unitsOf(UnitType.MissileSilo).every((s) => s.constructing)) return "Silo still under construction";
-      }
       if (!map.isLand(tile)) return "Target must be land";
+      if (!this.isDev()) {
+        const silos = player.unitsOf(UnitType.MissileSilo);
+        if (silos.length === 0) return "Requires a Missile Silo";
+        const done = silos.filter((s) => !s.constructing);
+        if (!done.length) return "Silo still under construction";
+        if (!done.some((s) => this.siloCanReach(s, tile))) return "Target out of silo range";
+      }
     }
     if (!prepaid && !this.isDev()) {
       const existing = STRUCTURES.has(type) ? this.stackTarget(player, type, tile) : undefined;

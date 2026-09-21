@@ -59,7 +59,7 @@ export class PlayerPanel {
     const allied = human.isAlliedWith(p);
     const alliance = human.allianceWith(p);
     const isMe = p === human;
-    const kind = p.type === PlayerType.Bot ? "Tribe" : p.type === PlayerType.Nation ? "Nation" : "Player";
+    const kind = p.isHuman() ? "Player" : "AI";
     const embargoed = human.embargoes.has(p.smallID);
     const left = alliance ? Math.ceil((alliance.expiresAt - game.ticks) / 10) : 0;
     const expiring = allied && left <= 30;

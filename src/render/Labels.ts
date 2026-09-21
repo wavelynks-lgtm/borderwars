@@ -26,7 +26,7 @@ export class Labels {
         this.centroids.delete(p);
         continue;
       }
-      if (p.isBot() && dist > 220) continue;
+      if (p.isAI() && dist > 220 && !this.game.inSpawnPhase()) continue;
       const prev = this.centroids.get(p);
       if (prev !== undefined && map.owner[prev] === p.smallID && map.isLand(prev)) continue;
       this.centroids.set(p, this.pickAnchor(p));
@@ -71,7 +71,7 @@ export class Labels {
       }
       const share = this.game.landPercent(p) / 100;
       const minShare = Math.max(0, (dist - 110) / 340) * 0.004;
-      if ((share < minShare || (p.isBot() && dist > 220)) && !p.isHuman()) {
+      if (!this.game.inSpawnPhase() && (share < minShare || (p.isAI() && dist > 220)) && !p.isHuman()) {
         if (el && el.style.display !== "none") el.style.display = "none";
         continue;
       }

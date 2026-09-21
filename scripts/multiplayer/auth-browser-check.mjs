@@ -18,7 +18,7 @@ try{
   const message=JSON.parse(String(raw));
   if(message.type==='leave')leaves++;
   if(message.type==='auth'){assert.equal(message.token,matchToken);authenticated=true;ws.send(JSON.stringify({type:'welcome',profile:{id:user.id,name:user.name},rooms:[]}));}
-  if(message.type==='queue')ws.send(JSON.stringify({type:'room',room:{id:'TESTROOM',name:'Random test lobby',kind:'random',phase:'lobby',countdownAt:Date.now()+60000,serverTime:Date.now(),capacity:8,host:user.id,members:[{id:user.id,name:user.name,color:'#ff0000',connected:true,ready:true}],settings:{numNations:6,numBots:4,goldMultiplier:1,maxTimerMinutes:30}}}));
+  if(message.type==='queue')ws.send(JSON.stringify({type:'room',room:{id:'TESTROOM',name:'Random test lobby',kind:'random',phase:'lobby',countdownAt:Date.now()+60000,serverTime:Date.now(),capacity:35,host:user.id,members:[{id:user.id,name:user.name,color:'#ff0000',connected:true,ready:true}],settings:{numNations:0,numBots:49,goldMultiplier:1,maxTimerMinutes:30}}}));
  });});
  await page.goto('http://127.0.0.1:4180');await page.getByRole('button',{name:'▣ Sign in',exact:true}).click();
  await page.getByLabel('Email address').fill(user.email);await page.getByLabel('Password',{exact:true}).fill('a long test password');await page.getByRole('button',{name:'Sign in',exact:true}).click();

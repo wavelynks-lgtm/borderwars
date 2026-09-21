@@ -24,8 +24,7 @@ export interface FeaturedMatch {
   title: string;
   tag: string;
   tags: string[];
-  nations: number;
-  bots: number;
+  players: number;
   goldMultiplier: number;
   randomSpawn: boolean;
   instantBuild: boolean;
@@ -37,8 +36,7 @@ export const PLAYLIST: FeaturedMatch[] = [
     title: "Earth",
     tag: "WORLD",
     tags: ["Random Spawn"],
-    nations: 10,
-    bots: 9,
+    players: 20,
     goldMultiplier: 1,
     randomSpawn: true,
     instantBuild: false,
@@ -48,8 +46,7 @@ export const PLAYLIST: FeaturedMatch[] = [
     title: "Mars",
     tag: "SPLIT",
     tags: ["2× Gold"],
-    nations: 24,
-    bots: 36,
+    players: 60,
     goldMultiplier: 2,
     randomSpawn: false,
     instantBuild: false,
@@ -58,9 +55,8 @@ export const PLAYLIST: FeaturedMatch[] = [
     world: "earth",
     title: "Earth",
     tag: "PACKED",
-    tags: ["Every Country"],
-    nations: 200,
-    bots: 80,
+    tags: ["Full lobby"],
+    players: 100,
     goldMultiplier: 1,
     randomSpawn: false,
     instantBuild: false,
@@ -70,8 +66,7 @@ export const PLAYLIST: FeaturedMatch[] = [
     title: "Mars",
     tag: "DUST",
     tags: ["Random Spawn", "2× Gold"],
-    nations: 28,
-    bots: 40,
+    players: 68,
     goldMultiplier: 2,
     randomSpawn: true,
     instantBuild: false,
@@ -81,8 +76,7 @@ export const PLAYLIST: FeaturedMatch[] = [
     title: "Earth",
     tag: "GOLD",
     tags: ["2× Gold"],
-    nations: 32,
-    bots: 50,
+    players: 82,
     goldMultiplier: 2,
     randomSpawn: false,
     instantBuild: false,
@@ -92,8 +86,7 @@ export const PLAYLIST: FeaturedMatch[] = [
     title: "Mars",
     tag: "WAR",
     tags: ["Instant Build", "Random Spawn"],
-    nations: 24,
-    bots: 50,
+    players: 74,
     goldMultiplier: 1,
     randomSpawn: true,
     instantBuild: true,

@@ -819,9 +819,13 @@ export class UnitLayer {
     this.effects.push({ mesh: flash, born: now, life: 500, from: outer * this.tileWorld * 0.6, to: outer * this.tileWorld * 0.2, fade: true });
   }
 
-  /** world size in tiles — icons lock to the map so zoom-in makes them bigger pixels */
+  /**
+   * World size in tiles. Structures lock to the map so zoom-in makes them
+   * bigger pixels. OpenFront's close-zoom baseline is 60/7 tiles; half of
+   * that keeps plates readable without covering neighboring cities.
+   */
   private spriteTiles(u: Unit): number {
-    if (u.isStructure()) return (60 / 7) * structureShape(u.type).scale;
+    if (u.isStructure()) return (30 / 7) * structureShape(u.type).scale;
     if (u.type === UnitType.TradeShip) return 1;
     if (u.type === UnitType.TransportShip) return 1;
     if (u.type === UnitType.Warship) return 3;
@@ -838,7 +842,7 @@ export class UnitLayer {
   }
 
   private ghostSpan(type: UnitType): number {
-    if (STRUCTURES.has(type)) return (60 / 7) * structureShape(type).scale;
+    if (STRUCTURES.has(type)) return (30 / 7) * structureShape(type).scale;
     if (type === UnitType.City) return 7.2;
     if (type === UnitType.DefensePost || type === UnitType.Radar) return 5.2;
     if (type === UnitType.Port) return 6.4;
@@ -874,7 +878,7 @@ export class UnitLayer {
     if (this.east.lengthSq() < 1e-8) this.east.set(1, 0, 0).cross(this.tmp);
     this.east.normalize();
     this.north.copy(this.tmp).cross(this.east).normalize();
-    const step = this.tileWorld * 2.4;
+    const step = this.tileWorld * 1.2;
     const col = i % 2;
     const row = Math.floor(i / 2);
     s.position.addScaledVector(this.east, (col - 0.35) * step);

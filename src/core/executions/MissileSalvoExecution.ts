@@ -19,7 +19,7 @@ export class MissileSalvoExecution implements Execution {
     const g=this.game;
     while(this.orders.length){
       const order=this.orders[0];
-      const silos=this.owner.unitsOf(UnitType.MissileSilo).filter(s=>s.active&&!s.constructing&&(g.isDev()||g.map.dist(s.tile,order.tile)<=g.config.nukeTargetableRange()*(1+.5*(s.level-1))));
+      const silos=this.owner.unitsOf(UnitType.MissileSilo).filter(s=>!s.constructing&&g.siloCanReach(s,order.tile));
       if(!g.map.isLand(order.tile)||!silos.length||g.config.isUnitDisabled(this.type)){
         this.owner.gold+=order.price;this.orders.shift();
         g.displayMessage("Queued missile refunded: target or silo unavailable",MessageType.Warn,this.owner.smallID);continue;
