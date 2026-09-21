@@ -3,7 +3,7 @@ import type {Game} from '../core/Game';
 import {attackTile,build,sendBoat,moveWarship,retreatAttack,retreatBoat,upgradeUnit,queueMissiles} from '../core/actions';
 import {PlayerType,UnitType,STRUCTURES,NUKES,type GameSettings} from '../core/types';
 import type {MissileSalvoExecution} from '../core/executions/MissileSalvoExecution';
-export const PROTOCOL=1;
+export const PROTOCOL=2;
 export type Command={kind:string;tile?:number;target?:number;unit?:number;id?:number;value?:number;on?:boolean;type?:UnitType;tiles?:number[];emoji?:string};
 export interface Member {id:string;name:string;color:string;playerId:number;ready:boolean;connected:boolean;cosmetics?:Cosmetics}
 export interface MatchInfo {id:string;settings:GameSettings;members:Member[];mapHash:string;mapURL:string}
@@ -38,12 +38,18 @@ export function applyCommand(g:Game,playerId:number,c:Command):string|null {
  const p=g.player(playerId);if(!p||p.type!==PlayerType.Human)return 'Invalid player';
  if(g.winner)return 'Match finished';
  if(c.kind==='spawn'){
-  if(!g.inSpawnPhase()||p.hasSpawned||!g.map.isValid(c.tile!)||!g.canSpawnAt(c.tile!,p))return 'Spawn unavailable';
+  if(!g.inSpawnPhase()||!g.map.isValid(c.tile!))return 'Spawn unavailable';
+  if(p.hasSpawned){
+    const owner=g.map.owner[c.tile!];
+    if(!g.map.isLand(c.tile!)||(owner!==0&&owner!==p.smallID))return 'Spawn unavailable';
+    g.spawnPlayer(p,c.tile!);return null;
+  }
+  if(!g.canSpawnAt(c.tile!,p))return 'Spawn unavailable';
   g.spawnPlayer(p,c.tile!);return null;
  }
- if(!p.hasSpawned||!p.alive)return 'You have no territory';
  if(c.kind==='attackRatio'){p.attackRatio=Math.max(.01,c.value!);return null;}
  if(c.kind==='troopRatio'){p.targetTroopRatio=c.value!;return null;}
+ if(!p.hasSpawned||!p.alive)return 'You have no territory';
  if(g.inSpawnPhase())return 'Wait for the countdown';
  if(c.tile!==undefined&&!g.map.isValid(c.tile))return 'Invalid tile';
  const other=c.target?g.player(c.target):null;

@@ -9,6 +9,16 @@ import {Room} from '../server/room.ts';
 const map=()=>new GameMap(256,128,new Uint8Array(256*128).fill(TerrainType.Plains),new Uint16Array(256*128),[]);
 const members=()=>[{id:'a',name:'Alpha',color:'#ff4d6d',playerId:0,ready:true,connected:true},{id:'b',name:'Beta',color:'#55b8ff',playerId:0,ready:true,connected:true}];
 const settings={...DEFAULT_SETTINGS,numNations:0,numBots:2,randomSpawn:true,spawnPhaseSeconds:1};
+test('online humans stay unplaced so they can click a spawn circle',async()=>{
+ const g=await createOnlineGame(map(),settings,members(),'a');
+ assert.ok(g.allPlayers().filter(p=>p.type==='human').every(p=>!p.hasSpawned));
+ const tile=g.map.ref(12,10);
+ assert.equal(applyCommand(g,1,{kind:'spawn',tile}),null);
+ assert.equal(g.player(1).hasSpawned,true);
+ assert.equal(applyCommand(g,1,{kind:'spawn',tile:g.map.ref(40,10)}),null);
+ assert.equal(g.map.owner[tile],0);
+ assert.equal(g.player(1).spawnTile,g.map.ref(40,10));
+});
 test('two local perspectives and a server stay deterministic through recruitment, orders, buildings and replay',async()=>{
  const a=await createOnlineGame(map(),settings,members(),'a'),b=await createOnlineGame(map(),settings,members(),'b'),replay=await createOnlineGame(map(),settings,members(),'a');
  const log=[];

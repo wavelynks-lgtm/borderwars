@@ -39,7 +39,7 @@ export class OnlineClient {
   this.ws.onerror=()=>{};
  }
  send(data:unknown){if(this.ws?.readyState===WebSocket.OPEN)this.ws.send(JSON.stringify(data));}
- command(command:Command){if(!this.connected||this.halted){this.emit({type:'error',message:'Wait for the server connection'});return;}if(command.kind==='attackRatio'||command.kind==='troopRatio'){this.ratios.set(command.kind,command);if(!this.ratioTimer)this.ratioTimer=window.setTimeout(()=>{this.ratioTimer=0;for(const c of this.ratios.values())this.send({type:'command',command:c});this.ratios.clear();},200);return;}this.send({type:'command',command});}
+ command(command:Command){if(this.halted)return;if(!this.connected){this.emit({type:'error',message:'Wait for the server connection'});return;}if(command.kind==='attackRatio'||command.kind==='troopRatio'){this.ratios.set(command.kind,command);if(!this.ratioTimer)this.ratioTimer=window.setTimeout(()=>{this.ratioTimer=0;for(const c of this.ratios.values())this.send({type:'command',command:c});this.ratios.clear();},200);return;}this.send({type:'command',command});}
  attach(game:Game){this.game=game;this.send({type:'loaded',tick:game.ticks});}
  advance():void{
   if(!this.game||this.halted)return;

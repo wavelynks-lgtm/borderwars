@@ -247,8 +247,7 @@ export class App {
 
     this.globe.setSpawnMode(true);
     this.globe.setLocalOwner(human.smallID);
-    if(online&&human.hasSpawned)this.globe.flyTo(human.spawnTile,700);
-    if (settings.randomSpawn && !human.hasSpawned) {
+    if (!online && settings.randomSpawn && !human.hasSpawned) {
       const t = game.randomSpawnTile(human);
       if (t >= 0) {
         game.spawnPlayer(human, t);
@@ -539,7 +538,7 @@ export class App {
             this.order({kind:"spawn",tile},()=>game.spawnPlayer(human,tile));
             this.unitLayer.ping(tile, human.color, game.config.spawnRadius() + 2);
             this.globe.setPreviewTiles([]);
-            this.globe.flyTo(tile, 700);
+            if (!this.online) this.globe.flyTo(tile, 700);
           },
         }
       : allied
@@ -741,7 +740,7 @@ export class App {
       this.order({kind:"spawn",tile},()=>game.spawnPlayer(human,tile));
       this.unitLayer.ping(tile, human.color, game.config.spawnRadius() + 2);
       this.globe.setPreviewTiles([]);
-      this.globe.flyTo(tile, 700);
+      if (!this.online) this.globe.flyTo(tile, 700);
       return;
     }
     const ship = this.shipNear(tile, UnitType.Warship, human, map.tiles(8));
