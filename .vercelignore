@@ -1,0 +1,9 @@
+.env
+.env.*
+.neon
+.local
+.agents
+.ref
+node_modules
+docs
+tests

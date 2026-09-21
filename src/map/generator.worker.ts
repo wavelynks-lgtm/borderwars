@@ -1,0 +1,2 @@
+import {generateWorld} from './generator';
+self.onmessage=e=>{try{const map=generateWorld(e.data,(message,percent)=>self.postMessage({progress:{message,percent}}));self.postMessage({map:{width:map.width,height:map.height,terrain:map.terrain,country:map.country,countries:map.countries,elevation:map.elevation,generated:map.generated}},{transfer:[map.terrain.buffer,map.country.buffer,map.elevation!.buffer]});}catch(e){self.postMessage({error:(e as Error).message});}};

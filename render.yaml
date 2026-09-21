@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: borderwars-multiplayer
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm run server
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 22.14.0
+      - key: NODE_ENV
+        value: production
+      - key: MAX_ROOMS
+        value: "1"
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: DATABASE_URL
+        sync: false

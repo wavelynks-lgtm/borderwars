@@ -1,0 +1,1817 @@
+{
+  "source": "OpenFrontIO df9114ee681dcb1a0af47215438f4e60db5d0719 Config.attackLogic; numerical outputs generated from upstream method and DetMath",
+  "fixtures": [
+    {
+      "name": "1/1000/neutral",
+      "input": {
+        "terrain": 1,
+        "attackTroops": 1000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": null,
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 16,
+        "defenderTroopLoss": 0,
+        "tickFraction": 0.20625
+      }
+    },
+    {
+      "name": "1/1000/nation",
+      "input": {
+        "terrain": 1,
+        "attackTroops": 1000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 76.62326333544432,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.9039037640047141
+      }
+    },
+    {
+      "name": "1/1000/bot",
+      "input": {
+        "terrain": 1,
+        "attackTroops": 1000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "bot",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 53.63628433481102,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.9039037640047141
+      }
+    },
+    {
+      "name": "1/1000/fort",
+      "input": {
+        "terrain": 1,
+        "attackTroops": 1000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": true,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 383.1163166772216,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 2.711711292014142
+      }
+    },
+    {
+      "name": "1/1000/traitor",
+      "input": {
+        "terrain": 1,
+        "attackTroops": 1000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": true
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 38.31163166772216,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.7231230112037713
+      }
+    },
+    {
+      "name": "1/1000/fallout",
+      "input": {
+        "terrain": 1,
+        "attackTroops": 1000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": 0.2,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 352.4670113430439,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 4.157957314421684
+      }
+    },
+    {
+      "name": "1/10000/neutral",
+      "input": {
+        "terrain": 1,
+        "attackTroops": 10000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": null,
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 16,
+        "defenderTroopLoss": 0,
+        "tickFraction": 0.03125
+      }
+    },
+    {
+      "name": "1/10000/nation",
+      "input": {
+        "terrain": 1,
+        "attackTroops": 10000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 76.62326333544432,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.1807807528009428
+      }
+    },
+    {
+      "name": "1/10000/bot",
+      "input": {
+        "terrain": 1,
+        "attackTroops": 10000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "bot",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 53.63628433481102,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.1807807528009428
+      }
+    },
+    {
+      "name": "1/10000/fort",
+      "input": {
+        "terrain": 1,
+        "attackTroops": 10000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": true,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 383.1163166772216,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.5423422584028283
+      }
+    },
+    {
+      "name": "1/10000/traitor",
+      "input": {
+        "terrain": 1,
+        "attackTroops": 10000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": true
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 38.31163166772216,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.14462460224075427
+      }
+    },
+    {
+      "name": "1/10000/fallout",
+      "input": {
+        "terrain": 1,
+        "attackTroops": 10000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": 0.2,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 352.4670113430439,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.8315914628843368
+      }
+    },
+    {
+      "name": "1/100000/neutral",
+      "input": {
+        "terrain": 1,
+        "attackTroops": 100000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": null,
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 16,
+        "defenderTroopLoss": 0,
+        "tickFraction": 0.03125
+      }
+    },
+    {
+      "name": "1/100000/nation",
+      "input": {
+        "terrain": 1,
+        "attackTroops": 100000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 38.31163166772216,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.024104100373459038
+      }
+    },
+    {
+      "name": "1/100000/bot",
+      "input": {
+        "terrain": 1,
+        "attackTroops": 100000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "bot",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 26.81814216740551,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.024104100373459038
+      }
+    },
+    {
+      "name": "1/100000/fort",
+      "input": {
+        "terrain": 1,
+        "attackTroops": 100000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": true,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 191.5581583386108,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.0723123011203771
+      }
+    },
+    {
+      "name": "1/100000/traitor",
+      "input": {
+        "terrain": 1,
+        "attackTroops": 100000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": true
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 19.15581583386108,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.019283280298767233
+      }
+    },
+    {
+      "name": "1/100000/fallout",
+      "input": {
+        "terrain": 1,
+        "attackTroops": 100000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": 0.2,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 176.23350567152195,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.11087886171791157
+      }
+    },
+    {
+      "name": "1/1000000/neutral",
+      "input": {
+        "terrain": 1,
+        "attackTroops": 1000000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": null,
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 16,
+        "defenderTroopLoss": 0,
+        "tickFraction": 0.03125
+      }
+    },
+    {
+      "name": "1/1000000/nation",
+      "input": {
+        "terrain": 1,
+        "attackTroops": 1000000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 22.986979000633298,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.019765362306236413
+      }
+    },
+    {
+      "name": "1/1000000/bot",
+      "input": {
+        "terrain": 1,
+        "attackTroops": 1000000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "bot",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 16.090885300443308,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.019765362306236413
+      }
+    },
+    {
+      "name": "1/1000000/fort",
+      "input": {
+        "terrain": 1,
+        "attackTroops": 1000000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": true,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 114.93489500316649,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.05929608691870923
+      }
+    },
+    {
+      "name": "1/1000000/traitor",
+      "input": {
+        "terrain": 1,
+        "attackTroops": 1000000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": true
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 11.493489500316649,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.015812289844989134
+      }
+    },
+    {
+      "name": "1/1000000/fallout",
+      "input": {
+        "terrain": 1,
+        "attackTroops": 1000000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": 0.2,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 105.74010340291316,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.09092066660868747
+      }
+    },
+    {
+      "name": "2/1000/neutral",
+      "input": {
+        "terrain": 2,
+        "attackTroops": 1000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": null,
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 20,
+        "defenderTroopLoss": 0,
+        "tickFraction": 0.25
+      }
+    },
+    {
+      "name": "2/1000/nation",
+      "input": {
+        "terrain": 2,
+        "attackTroops": 1000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 95.7790791693054,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 1.09564092606632
+      }
+    },
+    {
+      "name": "2/1000/bot",
+      "input": {
+        "terrain": 2,
+        "attackTroops": 1000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "bot",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 67.04535541851378,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 1.09564092606632
+      }
+    },
+    {
+      "name": "2/1000/fort",
+      "input": {
+        "terrain": 2,
+        "attackTroops": 1000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": true,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 478.89539584652704,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 3.28692277819896
+      }
+    },
+    {
+      "name": "2/1000/traitor",
+      "input": {
+        "terrain": 2,
+        "attackTroops": 1000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": true
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 47.8895395846527,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.876512740853056
+      }
+    },
+    {
+      "name": "2/1000/fallout",
+      "input": {
+        "terrain": 2,
+        "attackTroops": 1000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": 0.2,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 440.5837641788048,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 5.039948259905072
+      }
+    },
+    {
+      "name": "2/10000/neutral",
+      "input": {
+        "terrain": 2,
+        "attackTroops": 10000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": null,
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 20,
+        "defenderTroopLoss": 0,
+        "tickFraction": 0.03125
+      }
+    },
+    {
+      "name": "2/10000/nation",
+      "input": {
+        "terrain": 2,
+        "attackTroops": 10000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 95.7790791693054,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.21912818521326397
+      }
+    },
+    {
+      "name": "2/10000/bot",
+      "input": {
+        "terrain": 2,
+        "attackTroops": 10000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "bot",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 67.04535541851378,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.21912818521326397
+      }
+    },
+    {
+      "name": "2/10000/fort",
+      "input": {
+        "terrain": 2,
+        "attackTroops": 10000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": true,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 478.89539584652704,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.6573845556397921
+      }
+    },
+    {
+      "name": "2/10000/traitor",
+      "input": {
+        "terrain": 2,
+        "attackTroops": 10000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": true
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 47.8895395846527,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.17530254817061117
+      }
+    },
+    {
+      "name": "2/10000/fallout",
+      "input": {
+        "terrain": 2,
+        "attackTroops": 10000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": 0.2,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 440.5837641788048,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 1.0079896519810145
+      }
+    },
+    {
+      "name": "2/100000/neutral",
+      "input": {
+        "terrain": 2,
+        "attackTroops": 100000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": null,
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 20,
+        "defenderTroopLoss": 0,
+        "tickFraction": 0.03125
+      }
+    },
+    {
+      "name": "2/100000/nation",
+      "input": {
+        "terrain": 2,
+        "attackTroops": 100000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 47.8895395846527,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.02921709136176854
+      }
+    },
+    {
+      "name": "2/100000/bot",
+      "input": {
+        "terrain": 2,
+        "attackTroops": 100000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "bot",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 33.52267770925689,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.02921709136176854
+      }
+    },
+    {
+      "name": "2/100000/fort",
+      "input": {
+        "terrain": 2,
+        "attackTroops": 100000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": true,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 239.44769792326352,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.0876512740853056
+      }
+    },
+    {
+      "name": "2/100000/traitor",
+      "input": {
+        "terrain": 2,
+        "attackTroops": 100000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": true
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 23.94476979232635,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.02337367308941483
+      }
+    },
+    {
+      "name": "2/100000/fallout",
+      "input": {
+        "terrain": 2,
+        "attackTroops": 100000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": 0.2,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 220.2918820894024,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.1343986202641353
+      }
+    },
+    {
+      "name": "2/1000000/neutral",
+      "input": {
+        "terrain": 2,
+        "attackTroops": 1000000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": null,
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 20,
+        "defenderTroopLoss": 0,
+        "tickFraction": 0.03125
+      }
+    },
+    {
+      "name": "2/1000000/nation",
+      "input": {
+        "terrain": 2,
+        "attackTroops": 1000000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 28.733723750791622,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.023958014916650196
+      }
+    },
+    {
+      "name": "2/1000000/bot",
+      "input": {
+        "terrain": 2,
+        "attackTroops": 1000000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "bot",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 20.113606625554134,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.023958014916650196
+      }
+    },
+    {
+      "name": "2/1000000/fort",
+      "input": {
+        "terrain": 2,
+        "attackTroops": 1000000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": true,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 143.6686187539581,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.0718740447499506
+      }
+    },
+    {
+      "name": "2/1000000/traitor",
+      "input": {
+        "terrain": 2,
+        "attackTroops": 1000000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": true
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 14.366861875395811,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.01916641193332016
+      }
+    },
+    {
+      "name": "2/1000000/fallout",
+      "input": {
+        "terrain": 2,
+        "attackTroops": 1000000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": 0.2,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 132.17512925364142,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.1102068686165909
+      }
+    },
+    {
+      "name": "3/1000/neutral",
+      "input": {
+        "terrain": 3,
+        "attackTroops": 1000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": null,
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 24,
+        "defenderTroopLoss": 0,
+        "tickFraction": 0.3125
+      }
+    },
+    {
+      "name": "3/1000/nation",
+      "input": {
+        "terrain": 3,
+        "attackTroops": 1000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 114.93489500316649,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 1.3695511575829
+      }
+    },
+    {
+      "name": "3/1000/bot",
+      "input": {
+        "terrain": 3,
+        "attackTroops": 1000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "bot",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 80.45442650221653,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 1.3695511575829
+      }
+    },
+    {
+      "name": "3/1000/fort",
+      "input": {
+        "terrain": 3,
+        "attackTroops": 1000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": true,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 574.6744750158324,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 4.1086534727487
+      }
+    },
+    {
+      "name": "3/1000/traitor",
+      "input": {
+        "terrain": 3,
+        "attackTroops": 1000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": true
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 57.467447501583244,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 1.09564092606632
+      }
+    },
+    {
+      "name": "3/1000/fallout",
+      "input": {
+        "terrain": 3,
+        "attackTroops": 1000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": 0.2,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 528.7005170145658,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 6.299935324881339
+      }
+    },
+    {
+      "name": "3/10000/neutral",
+      "input": {
+        "terrain": 3,
+        "attackTroops": 10000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": null,
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 24,
+        "defenderTroopLoss": 0,
+        "tickFraction": 0.03125
+      }
+    },
+    {
+      "name": "3/10000/nation",
+      "input": {
+        "terrain": 3,
+        "attackTroops": 10000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 114.93489500316649,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.27391023151658
+      }
+    },
+    {
+      "name": "3/10000/bot",
+      "input": {
+        "terrain": 3,
+        "attackTroops": 10000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "bot",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 80.45442650221653,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.27391023151658
+      }
+    },
+    {
+      "name": "3/10000/fort",
+      "input": {
+        "terrain": 3,
+        "attackTroops": 10000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": true,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 574.6744750158324,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.82173069454974
+      }
+    },
+    {
+      "name": "3/10000/traitor",
+      "input": {
+        "terrain": 3,
+        "attackTroops": 10000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": true
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 57.467447501583244,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.219128185213264
+      }
+    },
+    {
+      "name": "3/10000/fallout",
+      "input": {
+        "terrain": 3,
+        "attackTroops": 10000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": 0.2,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 528.7005170145658,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 1.259987064976268
+      }
+    },
+    {
+      "name": "3/100000/neutral",
+      "input": {
+        "terrain": 3,
+        "attackTroops": 100000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": null,
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 24,
+        "defenderTroopLoss": 0,
+        "tickFraction": 0.03125
+      }
+    },
+    {
+      "name": "3/100000/nation",
+      "input": {
+        "terrain": 3,
+        "attackTroops": 100000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 57.467447501583244,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.036521364202210665
+      }
+    },
+    {
+      "name": "3/100000/bot",
+      "input": {
+        "terrain": 3,
+        "attackTroops": 100000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "bot",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 40.22721325110827,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.036521364202210665
+      }
+    },
+    {
+      "name": "3/100000/fort",
+      "input": {
+        "terrain": 3,
+        "attackTroops": 100000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": true,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 287.3372375079162,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.10956409260663198
+      }
+    },
+    {
+      "name": "3/100000/traitor",
+      "input": {
+        "terrain": 3,
+        "attackTroops": 100000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": true
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 28.733723750791622,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.029217091361768532
+      }
+    },
+    {
+      "name": "3/100000/fallout",
+      "input": {
+        "terrain": 3,
+        "attackTroops": 100000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": 0.2,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 264.3502585072829,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.16799827533016903
+      }
+    },
+    {
+      "name": "3/1000000/neutral",
+      "input": {
+        "terrain": 3,
+        "attackTroops": 1000000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": null,
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 24,
+        "defenderTroopLoss": 0,
+        "tickFraction": 0.03125
+      }
+    },
+    {
+      "name": "3/1000000/nation",
+      "input": {
+        "terrain": 3,
+        "attackTroops": 1000000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 34.48046850094995,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.029947518645812743
+      }
+    },
+    {
+      "name": "3/1000000/bot",
+      "input": {
+        "terrain": 3,
+        "attackTroops": 1000000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "bot",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 24.13632795066496,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.029947518645812743
+      }
+    },
+    {
+      "name": "3/1000000/fort",
+      "input": {
+        "terrain": 3,
+        "attackTroops": 1000000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": true,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 172.40234250474973,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.08984255593743824
+      }
+    },
+    {
+      "name": "3/1000000/traitor",
+      "input": {
+        "terrain": 3,
+        "attackTroops": 1000000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": true
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": null,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 17.240234250474973,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.023958014916650193
+      }
+    },
+    {
+      "name": "3/1000000/fallout",
+      "input": {
+        "terrain": 3,
+        "attackTroops": 1000000,
+        "attacker": {
+          "type": "human",
+          "numTiles": 12000
+        },
+        "defender": {
+          "type": "nation",
+          "numTiles": 24000,
+          "troops": 100000,
+          "isTraitor": false
+        },
+        "defenderHasDefensePost": false,
+        "falloutRatio": 0.2,
+        "borderSize": 80,
+        "landTiles": 24000
+      },
+      "expected": {
+        "attackerTroopLoss": 158.61015510436974,
+        "defenderTroopLoss": 4.166666666666667,
+        "tickFraction": 0.1377585857707386
+      }
+    }
+  ]
+}
