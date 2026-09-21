@@ -1,7 +1,7 @@
 import {generatedColor} from "../map/generator";
 import {PATTERNS,type Cosmetics} from "../customization/cosmetics";
 import { regionBorderStrength } from "../map/regionGrouping";
-import { displayTileAtUV } from "../map/displayGrid";
+import { displayTile, displayTileAtUV } from "../map/displayGrid";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import type { GameMap } from "../core/GameMap";
@@ -580,8 +580,10 @@ export class GlobeRenderer {
 
   /** highlight the tiles currently being fought over by the local player's attacks */
   setFrontTiles(outgoing: Iterable<number>, incoming: Iterable<number>): void {
-    const nextOut = thinTiles(outgoing, 500);
-    const nextInc = thinTiles(incoming, 500);
+    // Mark the visible cell center so thin fronts survive polar pixel merging.
+    const visible = (tiles: Iterable<number>) => [...new Set(Array.from(tiles, t => displayTile(this.map.width, this.map.height, t)))];
+    const nextOut = visible(outgoing);
+    const nextInc = visible(incoming);
     if (nextOut.length === this.previousOut.length && nextInc.length === this.previousIn.length &&
       nextOut.every((t, i) => t === this.previousOut[i]) && nextInc.every((t, i) => t === this.previousIn[i])) return;
     this.previousOut = nextOut;
@@ -813,21 +815,4 @@ export class GlobeRenderer {
 
     this.renderer.render(this.scene, this.camera);
   }
-}
-
-/** keep a dotted sample of a large attack front so GPU row uploads stay small */
-function thinTiles(tiles: Iterable<number>, cap: number): number[] {
-  const out: number[] = [];
-  if (Array.isArray(tiles)) {
-    const arr = tiles as number[];
-    if (arr.length <= cap) return arr;
-    const step = Math.ceil(arr.length / cap);
-    for (let i = 0; i < arr.length; i += step) out.push(arr[i]);
-    return out;
-  }
-  for (const t of tiles) {
-    out.push(t);
-    if (out.length >= cap) break;
-  }
-  return out;
 }

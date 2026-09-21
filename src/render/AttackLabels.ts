@@ -43,7 +43,7 @@ export class AttackLabels {
   fronts(): { out: Iterable<number>[]; inc: Iterable<number>[] } {
     const me = this.game.human!;
     return {
-      out: me.outgoingAttacks.filter((a) => a.isActive() && a.target !== null).map((a) => a.frontTiles()),
+      out: me.outgoingAttacks.filter((a) => a.isActive()).map((a) => a.frontTiles()),
       inc: me.incomingAttacks.filter((a) => a.isActive()).map((a) => a.frontTiles()),
     };
   }

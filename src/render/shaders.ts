@@ -63,9 +63,12 @@ vec2 displayUv(vec2 raw) {
   return vec2((floor(fract(raw.x) * columns) + 0.5) / columns, (row + 0.5) / H);
 }
 
-float ownerAt(vec2 uv) {
-  vec2 rg = texture2D(uOwner, displayUv(uv)).rg;
-  return floor(rg.r * 255.0 + 0.5) + 256.0 * floor(rg.g * 255.0 + 0.5);
+float ownerId(vec4 cell) {
+  return floor(cell.r * 255.0 + 0.5) + 256.0 * floor(cell.g * 255.0 + 0.5);
+}
+float activeFront(vec4 cell) {
+  float flags = floor(cell.b * 255.0 + 0.5);
+  return bit(flags, 2.0) || bit(flags, 4.0) ? 1.0 : 0.0;
 }
 
 void main() {
@@ -106,8 +109,15 @@ void main() {
   float columns = max(1.0, floor(2.0 / uTexel.y * sin(PI * uv.y) + 0.5));
   vec2 east = vec2(1.0 / columns, 0.0);
   vec2 north = vec2(0.0, uTexel.y);
-  bool border = owner > 0.5 && (ownerAt(uv + east) != owner || ownerAt(uv - east) != owner
-    || ownerAt(uv + north) != owner || ownerAt(uv - north) != owner);
+  // Reuse the border's four texture samples for a surface-bound, one-cell halo.
+  vec4 eastCell = texture2D(uOwner, displayUv(uv + east));
+  vec4 westCell = texture2D(uOwner, displayUv(uv - east));
+  vec4 northCell = texture2D(uOwner, displayUv(uv + north));
+  vec4 southCell = texture2D(uOwner, displayUv(uv - north));
+  bool border = owner > 0.5 && (ownerId(eastCell) != owner || ownerId(westCell) != owner
+    || ownerId(northCell) != owner || ownerId(southCell) != owner);
+  float frontHalo = max(max(activeFront(eastCell), activeFront(westCell)),
+    max(activeFront(northCell), activeFront(southCell)));
   // Tracks and placement previews use surface geometry at a constant width.
   if (owner > 0.5) {
     vec3 pc = texture2D(uPalette, vec2((owner + 0.5) / 1024.0, 0.5)).rgb;
@@ -155,10 +165,17 @@ void main() {
     float pulse = uLod > 0.5 ? 0.7 : 0.6 + 0.4 * sin(uTime * 6.0);
     col = mix(col, checker > 0.5 ? vec3(1.0) : vec3(0.1, 0.9, 0.5), 0.8 * pulse);
   }
-  if (frontOut || frontIn) {
-    float pulse = uLod > 0.5 ? 0.85 : 0.7 + 0.3 * sin(uTime * 2.6);
-    vec3 tint = frontIn ? vec3(0.92, 0.32, 0.28) : vec3(1.0, 0.94, 0.72);
-    col = mix(col, tint, 0.28 * pulse);
+  if (isLand && uSpawnMode < 0.5 && !preview) {
+    float pulse = uLod > 0.5 ? 1.0 : 0.96 + 0.04 * sin(uTime * 2.6);
+    if (frontOut || frontIn) {
+      // Crisp scarlet advancing edge with a shaded red base; independent of
+      // globe lighting so the active front remains readable on the dark side.
+      vec3 scarlet = mix(vec3(0.72, 0.015, 0.035), vec3(1.0, 0.09, 0.12), 0.78 + checker * 0.22);
+      col = mix(col, scarlet * pulse, 0.94);
+    } else if (frontHalo > 0.5) {
+      col = mix(col, vec3(0.65, 0.015, 0.04), 0.20);
+      col += vec3(0.12, 0.006, 0.012) * pulse;
+    }
   }
 
   if (uSpawnMode > 0.5 && isLand && owner < 0.5) {
